@@ -28,6 +28,7 @@ const sidebars: SidebarsConfig = {
       items: [],
     },
     'glossary',
+    'cluster-landscape',
     'open-questions',
     'lab-access',
   ],

@@ -1,0 +1,123 @@
+---
+sidebar_position: 6
+title: "The Cluster Landscape"
+slug: /cluster-landscape
+---
+
+# The Cluster Landscape
+
+> *The largest AI compute installations in the world — what's operational, what's under construction, and what the numbers actually mean.*
+
+This page catalogs the largest known AI compute clusters based on publicly available information. It's intended as a reference for verification researchers, policy analysts, and anyone who needs to reason concretely about the scale of AI infrastructure that exists today.
+
+:::caution Important caveats
+GPU counts and power figures come from company announcements, press reports, and industry databases. Companies have incentives to overstate their deployments. "Planned" figures are aspirational and subject to change. Where possible, we note the source and confidence level. The [Epoch AI GPU Clusters database](https://epoch.ai/data/gpu-clusters) is the most comprehensive open tracker and estimates it covers only 10-20% of global cluster capacity.
+:::
+
+## Operational Clusters
+
+These clusters are confirmed to be running production workloads as of early 2026.
+
+| Cluster | Operator | Location | GPU/Accelerator Count | Hardware | Power | Networking | Status |
+|---------|----------|----------|----------------------|----------|-------|------------|--------|
+| **Colossus** | xAI | Memphis, TN | ~555,000 GPUs | H200 + GB200/GB300 | ~2 GW (target) | NVIDIA Spectrum-X Ethernet | Operational (Jan 2026) |
+| **Project Rainier** | AWS (for Anthropic) | New Carlisle, IN | ~500,000 chips | Trainium2 | 2.2 GW (site capacity) | Custom AWS fabric | Operational (Oct 2025) |
+| **Meta Cluster Fleet** | Meta | Multiple US sites | ~1.3M GPUs (fleet-wide) | H100, H200 (fleet) | >1 GW (aggregate) | InfiniBand + RoCE | Operational (distributed) |
+| **Stargate Phase 1** | OpenAI / Oracle | Abilene, TX | Not disclosed | GB200 | 200 MW+ (Phase 1) | Oracle Acceleron RoCE | Operational (Sep 2025) |
+| **El Capitan** | LLNL (DOE) | Livermore, CA | 44,544 APUs | AMD MI300A | 30 MW | HPE Slingshot-11 | Operational (Jan 2025) |
+
+### Notes on the table
+
+**xAI Colossus** is the single largest known single-site cluster. Phase 1 (100,000 H100 GPUs) was built in 122 days in mid-2024 — an unprecedented construction timeline. Phase 2 doubled it to 200,000 by early 2025. The January 2026 expansion to 555,000 GPUs introduced Blackwell-generation hardware alongside the existing H200s. The facility uses direct-to-chip liquid cooling developed with Supermicro and supplements grid power with 168+ Tesla Megapacks for power buffering. Notably, Colossus uses NVIDIA's Spectrum-X Ethernet platform rather than InfiniBand — a significant architectural choice that trades InfiniBand's mature ecosystem for Ethernet's scale and cost advantages.
+
+**Project Rainier** is the world's largest non-NVIDIA AI cluster. Built by AWS for Anthropic, it uses Amazon's custom Trainium2 accelerators rather than NVIDIA GPUs. Each Trainium2 UltraServer combines four physical servers with 16 Trainium2 chips each, delivering 20.8 peak petaflops per instance. Anthropic engineers work directly with Annapurna Labs (Amazon's chip division) on low-level kernel development. AWS expects to scale to over 1 million Trainium2 chips. This cluster is significant for verification because it demonstrates that the AI compute landscape is not NVIDIA-only — verification systems must account for diverse accelerator architectures.
+
+**Meta's cluster fleet** is harder to characterize as a single entity. Meta operates multiple clusters across multiple data centers. By end of 2025, Meta reported ~1.3 million GPUs fleet-wide, but these are distributed across facilities, not concentrated in a single cluster. Individual clusters include the well-documented 24,576-GPU systems (two clusters announced in early 2024) and larger subsequent deployments. Meta is notable for publishing detailed infrastructure blog posts through [Engineering at Meta](https://engineering.fb.com/), making it one of the better-documented large-scale operators.
+
+**Stargate Phase 1** in Abilene, Texas is the first operational piece of the much larger Stargate initiative. Construction began in June 2024 and was energized by September 2025. OpenAI has not disclosed detailed GPU counts for Phase 1, but the infrastructure uses Oracle's Acceleron RoCE networking rather than InfiniBand — another data point in the industry's gradual shift from InfiniBand toward Ethernet-based fabrics at scale.
+
+**El Capitan** represents the public sector's current peak. With 44,544 AMD MI300A APUs, it's the world's fastest supercomputer on the TOP500 list (1.81 exaFLOPS on HPL). But its total compute capacity is less than a quarter of xAI's Colossus. This gap between public-sector and private-sector AI compute is one of the defining trends in the field and has significant implications for government verification capabilities. El Capitan is also notable for using AMD rather than NVIDIA hardware, and for its 100% fanless, direct liquid cooling system.
+
+## Planned and Under Construction
+
+These deployments have been announced and have construction underway or completed, with target dates in 2026-2027.
+
+| Cluster | Operator | Location | Planned GPU Count | Hardware | Target Power | Target Date | Confidence |
+|---------|----------|----------|-------------------|----------|-------------|-------------|------------|
+| **Colossus Expansion** | xAI | Memphis + Southaven, MS | 1,000,000 GPUs | GB200/GB300 | 2 GW+ | Late 2026 | Medium — announced, third site acquired |
+| **Meta Prometheus** | Meta | New Albany, OH | 300,000-500,000 GPUs | GB200/GB300 | 2 GW+ | H2 2026 | Medium — announced, construction underway |
+| **Stargate Phase 2** | OpenAI / Oracle / SoftBank | Abilene, TX | Not disclosed | GB200/GB300 | 1 GW+ | Mid 2026 | High — construction started Mar 2025 |
+| **OCI Zettascale10** | Oracle | Multiple sites | Up to 800,000 GPUs | GB200 / MI450 | Multi-GW | H2 2026 | Medium — announced, taking orders |
+| **HUMAIN Flagship** | HUMAIN (Saudi PIF) | Saudi Arabia + US | Up to 600,000 GPUs | GB300 + MI450 | 500 MW+ (Phase 1) | 2026-2027 | Medium — partnerships signed, construction started |
+| **Stargate Norway** | OpenAI / Nscale / Aker | Narvik, Norway | 100,000 GPUs | NVIDIA (unspecified) | Not disclosed | End 2026 | Medium — announced Jul 2025 |
+| **AWS Trainium3 Clusters** | AWS | Multiple sites | Not disclosed | Trainium3 | Multi-GW | 2026-2027 | High — chip launched, deployment expected |
+
+## What the Numbers Mean
+
+### The GPU Count Problem
+
+GPU counts are the most commonly cited metric for cluster size, but they're misleading without context:
+
+- **Generation matters enormously.** A single GB200 GPU delivers roughly 7x the FP8 compute of an H100. A "100,000 H100" cluster and a "100,000 GB200" cluster are not comparable — the latter has ~7x more compute.
+- **Fleet vs. cluster.** Meta's "1.3 million GPUs" is a fleet total spread across many sites and clusters. xAI's "555,000 GPUs" is largely concentrated at a single site. The operational characteristics — and the verification challenges — are very different.
+- **Accelerator diversity.** Not all accelerators are GPUs. AWS Trainium2, Google TPUs, AMD MI300A APUs, and Intel Gaudi all have different architectures, memory systems, and interconnects. Comparing them by count alone is like comparing apples to a mix of apples, oranges, and pears.
+
+A more meaningful comparison would use **aggregate peak FLOPS** (at a specified precision) or **aggregate HBM bandwidth**, but companies don't always publish these figures consistently.
+
+### The Power Tell
+
+Power consumption is in many ways a more reliable indicator of actual compute capacity than GPU counts:
+
+| Metric | What It Tells You | Why It's Hard to Fake |
+|--------|-------------------|----------------------|
+| Utility power draw | Total facility load, including cooling overhead | Measured by the utility company, not the operator |
+| IT power (total - cooling) | Compute equipment load | Requires knowing PUE, but constrains the range of possible GPU counts |
+| Per-GPU TDP × GPU count | Expected IT power for claimed configuration | Must match utility data within PUE margins |
+
+If an operator claims to run 500,000 GB200 GPUs at training load, the math is straightforward: ~1,200W per GPU × 500,000 = 600 MW of IT power. At PUE 1.15, that's ~690 MW total. You can verify this against the utility feed — and at these power levels, the draw is visible on the regional power grid.
+
+This is why power is considered the strongest single verification signal for AI compute capacity. You can lie about GPU counts. You can't easily lie about 690 MW of power draw.
+
+### The Networking Shift
+
+A notable trend in the table above: several of the largest new clusters use **Ethernet-based fabrics** (NVIDIA Spectrum-X, Oracle Acceleron RoCE) rather than InfiniBand, which had been the dominant interconnect for AI training.
+
+This matters for verification because:
+- Ethernet-based fabrics use different management and monitoring tools than InfiniBand
+- SmartNIC capabilities differ between InfiniBand ConnectX and Ethernet BlueField/Spectrum NICs
+- Traffic monitoring techniques developed for InfiniBand may need adaptation for RoCE environments
+- The shift expands the set of vendors and protocols that verification systems must support
+
+### The Geographic Concentration
+
+Looking at where these clusters are located reveals a stark geographic concentration:
+
+- **United States:** xAI (Memphis), AWS (Indiana), Meta (multiple), OpenAI/Oracle (Abilene), LLNL (Livermore)
+- **Middle East:** HUMAIN/Saudi Arabia (Riyadh, Dammam)
+- **Europe:** Stargate Norway (Narvik) — planned
+
+As of mid-2025, the US contains approximately three-quarters of global GPU cluster performance. This concentration has direct implications for compute governance: any international verification framework must account for the fact that the vast majority of frontier AI compute is located in a single country, operated by a handful of private companies.
+
+### The Public-Private Gap
+
+Perhaps the most striking feature of the landscape is the gap between public-sector and private-sector compute:
+
+- **Largest public-sector system** (El Capitan): 44,544 AMD MI300A APUs, ~30 MW, 1.8 exaFLOPS
+- **Largest private-sector system** (xAI Colossus): 555,000 NVIDIA GPUs, ~2 GW target
+
+The private sector's share of global AI compute has grown from roughly 40% in 2019 to approximately 80% in 2025. This means that governments proposing compute governance frameworks must negotiate with — or regulate — private operators whose infrastructure dwarfs any government-owned system.
+
+For verification researchers, this asymmetry creates a challenge: the entities being verified have more AI compute expertise and infrastructure than the entities doing the verification.
+
+## How This Connects to the Field Guide
+
+The cluster landscape makes the concepts from the field guide concrete:
+
+- **[Physical Architecture](/docs/physical-architecture):** xAI's Colossus uses liquid cooling from Supermicro with Tesla Megapack power buffering. AWS Project Rainier spans 1,200 acres. These are the physical realities behind the kW-per-rack numbers.
+- **[Interconnects](/docs/interconnects):** The shift from InfiniBand to Ethernet at the largest clusters (xAI, Oracle/OpenAI) changes the monitoring landscape. NVLink opacity (the blind spot within racks) applies to every NVIDIA-based cluster in the table.
+- **[Cluster Management](/docs/cluster-management):** xAI reports running training jobs across 150,000+ GPUs with 99% uptime. At that scale, the MTBF math means they're handling hardware failures every few minutes.
+- **[Verification Relevance](/docs/verification):** Power draw at 2 GW is visible on regional power grids. But NVLink domains within each rack remain invisible to network monitoring. The verification challenge scales with the cluster.
+
+---
+
+*Data on this page draws from company announcements, press reporting, and the [Epoch AI GPU Clusters database](https://epoch.ai/data/gpu-clusters). If you have corrections or additional public data points, please [open an issue](https://github.com/lucid-computing-labs/ai-infra-field-guide/issues).*
