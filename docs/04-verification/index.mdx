@@ -1,0 +1,126 @@
+---
+sidebar_position: 5
+title: "Verification Relevance"
+---
+
+import ConceptCheck from '@site/src/components/ConceptCheck';
+import Scenario from '@site/src/components/Scenario';
+
+# Chapter 04: Verification Relevance
+
+> *What can you actually observe? What's invisible? What does this mean for AI governance and safety verification?*
+
+:::info Status
+This chapter is under active development. It covers some of the most novel material in the field guide — connecting infrastructure knowledge to verification and governance. Core arguments are being developed by domain experts. [Contributions welcome.](https://github.com/lucid-labs/ai-infra-field-guide/blob/main/CONTRIBUTING.md)
+:::
+
+## The Verification Problem
+
+As AI systems become more capable and consequential, governments and institutions are asking a fundamental question: **can we verify what's happening inside AI training clusters?**
+
+This isn't an abstract question. Proposed compute governance frameworks, international agreements on AI safety, and industry self-regulation commitments all depend on some ability to verify claims about how compute is being used. The infrastructure details in the preceding chapters matter because they define what's observable and what isn't.
+
+## The Observability Boundary
+
+Not all traffic in an AI cluster is created equal from a monitoring perspective. The critical distinction is between **NVLink traffic** and **network fabric traffic**:
+
+| Property | NVLink Domain | InfiniBand Fabric |
+|----------|--------------|-------------------|
+| Where it flows | Within an NVLink-connected group (e.g., within an NVL72 rack) | Between racks and across the cluster |
+| Bandwidth | 900 GB/s per GPU | 400 Gb/s per link |
+| Observable via SmartNIC? | **No** | **Yes** |
+| Observable via switch telemetry? | **No** | **Yes** |
+| Observable via BMC? | Partially (power, temperature) | N/A |
+
+This boundary is the single most important concept for verification architecture. A SmartNIC or network TAP placed on the InfiniBand fabric can observe inter-rack traffic patterns, but is completely blind to GPU-to-GPU communication within an NVLink domain. For an NVL72 rack, that means 72 GPUs' worth of internal communication is invisible to network-based monitoring.
+
+<ConceptCheck
+  question="A verification system uses SmartNIC-based monitoring on every server's InfiniBand port. A training run is configured to use 72 GPUs within a single NVL72 rack. What fraction of the training run's GPU-to-GPU communication can the verification system observe?"
+  options={[
+    {label: "(a) 100% — SmartNICs see all traffic on the servers they're attached to"},
+    {label: "(b) The fraction that crosses the InfiniBand boundary, which depends on the parallelism strategy"},
+    {label: "(c) Essentially none — all 72 GPUs communicate via NVLink within the rack, which SmartNICs can't see", correct: true},
+    {label: "(d) About 50% — SmartNICs see inter-node traffic but not intra-node traffic"},
+  ]}
+  explanation="If the entire training job fits within a single NVL72 rack, all GPU-to-GPU communication happens over NVLink, which is completely invisible to SmartNICs on the InfiniBand ports. The SmartNICs would only see traffic that leaves the rack (e.g., checkpoint saves to remote storage, parameter server communication). This is a fundamental limitation that verification architectures must account for — you cannot rely solely on network monitoring to verify what's happening inside an NVLink domain."
+/>
+
+## Attestation Surfaces
+
+Despite the NVLink blind spot, there are multiple **attestation surfaces** — points where verifiable information about cluster activity can be collected:
+
+### 1. Hardware-Level Attestation
+- **BMC (Baseboard Management Controller)** — Reports power draw, temperature, fan/pump speeds. A GPU under full training load has a distinctive power signature.
+- **GPU telemetry (DCGM)** — Reports SM utilization, memory utilization, NVLink utilization. Requires cooperation from the operator (or a trusted agent on the node).
+- **TPM/secure boot** — Can attest that the firmware and OS haven't been tampered with, establishing a chain of trust from hardware to software.
+
+### 2. Network-Level Attestation
+- **SmartNIC telemetry** — Observes InfiniBand traffic patterns, flow sizes, timing. Can characterize the communication signature of a training job.
+- **Switch counters** — Aggregate traffic statistics per port. Available via InfiniBand UFM or similar management tools.
+- **Network TAPs** — Physical devices that create a copy of traffic for analysis. Provide the highest fidelity but require physical installation.
+
+### 3. Software-Level Attestation
+- **Job scheduler logs** — Record what was scheduled, where, and when.
+- **Training framework metrics** — Loss curves, gradient norms, throughput. A training job producing a smooth loss curve that matches expected behavior is strong evidence that real training is occurring.
+- **Checkpoints** — Model weights saved periodically. A sequence of checkpoints showing gradual convergence is hard to fake.
+
+<ConceptCheck
+  question="An international verification protocol requires proving that a training run used no more than N GPUs. Which combination of attestation surfaces provides the strongest evidence?"
+  options={[
+    {label: "(a) SmartNIC monitoring alone — it can see all traffic and count active GPUs"},
+    {label: "(b) BMC power telemetry + network topology mapping + scheduler logs", correct: true},
+    {label: "(c) Training loss curves — if the loss matches an N-GPU run, that proves it"},
+    {label: "(d) Physical inspection of the facility to count installed GPUs"},
+  ]}
+  explanation="No single attestation surface is sufficient. BMC power telemetry can verify how many GPUs are drawing training-level power (distinctive power signature). Network topology mapping establishes which GPUs could communicate with the training job. Scheduler logs record the allocation. Cross-referencing these three sources is much stronger than any one alone. SmartNIC monitoring misses NVLink-domain activity. Loss curves can match many configurations. Physical GPU count tells you capacity but not usage."
+/>
+
+## Verification Challenges
+
+### The Cooperation Spectrum
+
+Verification architectures exist on a spectrum from **fully cooperative** (operator provides full access and telemetry) to **adversarial** (operator actively tries to deceive the verifier).
+
+Most practical verification scenarios are somewhere in between — **cooperative but untrusted**. The operator agrees to verification but might have incentives to misrepresent certain aspects of their operations (scale, timing, purpose of workloads).
+
+### Specific Challenges
+
+1. **NVLink opacity** — As discussed, intra-rack GPU communication is invisible to network monitoring. Verification must rely on indirect indicators (power signatures, BMC telemetry, software-level metrics) for activity within NVLink domains.
+
+2. **Telemetry integrity** — If the verifier relies on software-reported metrics, how do you know the software hasn't been modified to report false data? Hardware-rooted trust (TPM, secure boot, signed firmware) is necessary to anchor the chain of trust.
+
+3. **Temporal verification** — Proving what happened in the past is harder than monitoring the present. Logs can be modified, and continuous monitoring requires persistent access.
+
+4. **Multi-tenancy** — When a cluster runs multiple workloads, attributing specific resource usage to specific tenants requires fine-grained monitoring that may not be available.
+
+<Scenario
+  title="Cross-border training verification"
+  prompt="A government regulator asks you to verify that a training run was conducted entirely within national borders. The operator has a cluster spanning two data centers: one domestic, one in a neighboring country. They claim the training run used only the domestic cluster. The operator gives you access to SmartNIC telemetry, BMC logs, and scheduler records from the domestic facility."
+  questions={[
+    "What can you verify from the provided data?",
+    "What can't you verify, and why?",
+    "What additional evidence or access would you need to provide strong verification?",
+    "Could the operator have used the foreign cluster for some portion of the training while making it appear entirely domestic?",
+  ]}
+  hints={<span>Key considerations: SmartNIC telemetry from the domestic facility can show whether traffic left the facility via WAN links (which would indicate cross-border communication). BMC logs can confirm which GPUs were active. Scheduler logs show the job allocation. However, you only have data from the domestic facility — you have no visibility into what was happening at the foreign facility. The operator could potentially have run a coordinated workload across both facilities using a carefully partitioned parallelism strategy that minimizes detectable cross-border traffic. Stronger verification would require: access to the WAN link monitoring (or physical TAP on the cross-border link), attestation from the foreign facility that its GPUs were idle during the relevant period, or a trusted third-party monitoring system with access to both facilities.</span>}
+/>
+
+## Toward a Verification Architecture
+
+A robust verification system for AI training infrastructure likely needs:
+
+1. **Hardware-rooted trust** — Secure boot chains, TPM attestation, signed firmware. This ensures the software stack hasn't been tampered with.
+
+2. **Multi-layer monitoring** — Combining BMC telemetry, network monitoring, and software metrics. No single layer is sufficient; cross-referencing catches inconsistencies.
+
+3. **Continuous access** — Point-in-time audits are far weaker than continuous monitoring. A verifier needs persistent access to telemetry streams, not just periodic snapshots.
+
+4. **Physical verification** — Some claims (facility location, hardware inventory) can only be verified with physical inspection.
+
+5. **Cryptographic commitments** — Operators committing to telemetry data in real-time (e.g., signed, timestamped logs sent to a third party) makes after-the-fact tampering much harder.
+
+These are hard problems with no fully solved solutions today. That's precisely why understanding the infrastructure deeply — knowing what's observable and what isn't — is prerequisite knowledge for anyone working on AI governance.
+
+---
+
+*This is the final technical chapter. For a summary of unresolved problems and research questions, see [Open Questions](/docs/open-questions).*

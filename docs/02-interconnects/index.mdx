@@ -1,0 +1,239 @@
+---
+sidebar_position: 3
+title: "Interconnects"
+---
+
+import ConceptCheck from '@site/src/components/ConceptCheck';
+import Scenario from '@site/src/components/Scenario';
+import TopologyExplorer from '@site/src/components/TopologyExplorer';
+
+# Chapter 02: Interconnects
+
+> *NVLink, InfiniBand, and the invisible boundary between them. This is where most people's mental models of AI infrastructure break down — and where the verification story gets interesting.*
+
+## Why Interconnects Matter More Than Compute
+
+Here's a counterintuitive claim: for large-scale AI training, the interconnect architecture matters at least as much as the raw GPU compute. A single GPU is useless for training a frontier model. Training GPT-4-class systems requires thousands of GPUs working in concert, and "working in concert" means moving enormous amounts of data between them on every training step.
+
+On each step of training, every GPU:
+1. Processes a batch of data through its portion of the model (forward pass).
+2. Computes gradients for its portion (backward pass).
+3. **Synchronizes gradients with every other GPU** — this is the communication step.
+
+Step 3 is where interconnects dominate. In data-parallel training (the most common parallelism strategy), every GPU must send its gradients to every other GPU and receive the combined result. This **all-reduce** operation scales with the number of parameters in the model. For a 175-billion-parameter model at FP16 precision, each all-reduce moves approximately 350 GB of data — and this happens on *every training step*.
+
+If the interconnect is slow, every GPU sits idle waiting for the communication to complete. At scale, training systems are often **communication-bound**, not compute-bound.
+
+<ConceptCheck
+  question="A training cluster uses 1,024 GPUs with data parallelism. Each GPU computes gradients independently, then all GPUs perform an all-reduce. If the all-reduce takes 100ms and the forward+backward pass takes 200ms, what fraction of each training step is spent on communication?"
+  options={[
+    {label: "(a) About 10%"},
+    {label: "(b) About 33% — 100ms out of 300ms total", correct: true},
+    {label: "(c) About 50%"},
+    {label: "(d) It depends on the model size"},
+  ]}
+  explanation="Each step takes 200ms (compute) + 100ms (communication) = 300ms. Communication is 100/300 = 33% of the time. In practice, well-optimized systems overlap communication with computation (pipelining), but this example illustrates the fundamental tension: a third of wall-clock time is moving data, not doing math. As cluster size increases, the communication fraction tends to grow."
+/>
+
+## The Two-Network Architecture
+
+Modern NVIDIA AI clusters use **two fundamentally different networks** at different scales. Understanding this split is essential.
+
+### NVLink: The Internal Network
+
+NVLink is NVIDIA's proprietary GPU-to-GPU interconnect. In the Blackwell generation:
+
+- **Bandwidth:** 900 GB/s bidirectional per GPU (1.8 TB/s aggregate)
+- **Latency:** ~1-2 microseconds
+- **Topology:** All-to-all within a domain via NVSwitch
+- **Scope:** Within an NVLink domain (up to 72 GPUs in NVL72)
+
+NVLink is not a "network" in the way that most people think about networks. There are no IP addresses, no routing tables, no packet headers that a SmartNIC could inspect. It's closer to a very fast, proprietary memory bus that happens to span multiple chips. NVSwitch chips act as crossbar switches that allow any GPU to communicate with any other GPU in the domain at full bandwidth simultaneously.
+
+The critical property for verification: **NVLink traffic is invisible to any network-based monitoring system.** SmartNICs on the InfiniBand ports can't see it. Switch telemetry can't see it. It exists in a domain that is only observable through NVIDIA's own management tools (DCGM) running on the host, or indirectly through hardware telemetry like power draw.
+
+### InfiniBand: The External Network
+
+InfiniBand (IB) is the high-performance network fabric that connects NVLink domains (racks) to each other:
+
+- **Bandwidth:** 400 Gb/s (50 GB/s) per port with NDR InfiniBand
+- **Latency:** ~1-5 microseconds (one hop)
+- **Topology:** Fat-tree or Clos network with leaf and spine switches
+- **Scope:** Rack-to-rack and beyond
+- **RDMA-capable:** GPUs can read/write remote memory directly without CPU involvement
+
+InfiniBand is a real network with real packets, real switches, and real management infrastructure. The NVIDIA Unified Fabric Manager (UFM) provides topology discovery, routing, health monitoring, and performance counters. SmartNICs on the InfiniBand ports can inspect traffic. Switch ports report per-port statistics.
+
+This is the network that verification systems can actually observe.
+
+<ConceptCheck
+  question="A SmartNIC-based monitoring system is deployed on every InfiniBand port in an NVL72 cluster. Which traffic can it observe?"
+  options={[
+    {label: "(a) GPU-to-GPU communication within the NVLink domain"},
+    {label: "(b) Inter-rack communication over InfiniBand", correct: true},
+    {label: "(c) Both (a) and (b)"},
+    {label: "(d) Neither"},
+  ]}
+  explanation="NVLink traffic is invisible to SmartNICs — it never touches the InfiniBand fabric. SmartNICs can only observe traffic that flows over InfiniBand, which means inter-rack communication. This is the NVLink/InfiniBand visibility boundary, and it's the single most important fact for verification architecture."
+/>
+
+## The Topology Hierarchy
+
+Let's build up the full picture from a single GPU to a complete cluster. Use the interactive explorer below to navigate each level — pay attention to how bandwidth, latency, and observability change at each tier.
+
+<TopologyExplorer />
+
+### Level 1: Single GPU
+
+A modern Blackwell B200 GPU is a chip with 208 billion transistors and 80 GB of HBM3e memory. Its memory system provides ~8 TB/s of bandwidth between the compute cores and on-chip memory. The GPU connects to the rest of the system via NVLink (to other GPUs) and PCIe (to the CPU and NIC).
+
+### Level 2: NVLink Domain
+
+Within a DGX node or an NVL72 tray, GPUs are connected via NVLink through NVSwitch. Every GPU can talk to every other GPU at full NVLink bandwidth simultaneously. This is a non-blocking, all-to-all topology — there's no contention, no routing, no network congestion within the domain.
+
+The NVLink domain is the unit of "invisible compute" from a network monitoring perspective. Everything inside this domain is a black box to external observers.
+
+### Level 3: NVL72 Rack
+
+The GB200 NVL72 puts 72 Blackwell GPUs into a single liquid-cooled rack. The entire rack is one NVLink domain — all 72 GPUs can communicate via NVLink at 900 GB/s per GPU. External connectivity is provided by InfiniBand NICs (ConnectX-7) that connect the rack to the broader fabric.
+
+This is where the observability boundary sits. Traffic inside the rack = NVLink (invisible). Traffic leaving the rack = InfiniBand (observable).
+
+### Level 4: SuperPOD
+
+Multiple NVL72 racks are connected via an InfiniBand fat-tree network. A SuperPOD typically contains 8 racks (576 GPUs). Leaf switches connect to the racks; spine switches provide full connectivity between any two racks.
+
+All inter-rack traffic in a SuperPOD flows over InfiniBand and is fully observable via SmartNICs, switch counters, and optional network TAPs.
+
+### Level 5: Full Cluster
+
+Multiple SuperPODs connect through a core/director switch layer. The largest training clusters contain tens of thousands of GPUs across many SuperPODs. WAN links may connect geographically distributed cluster segments.
+
+<ConceptCheck
+  question="A 10,000-GPU training job is distributed across a cluster with NVL72 racks (72 GPUs each). The job uses data parallelism across racks and tensor parallelism within racks. What fraction of the GPU-to-GPU communication is observable via InfiniBand monitoring?"
+  options={[
+    {label: "(a) All of it — InfiniBand carries all traffic between GPUs"},
+    {label: "(b) Only the data-parallel all-reduce traffic between racks. Tensor-parallel traffic within each NVLink domain is invisible.", correct: true},
+    {label: "(c) None of it — NVLink handles everything"},
+    {label: "(d) About 50%, since half the GPUs are in each rack"},
+  ]}
+  explanation="Tensor parallelism places the communication-heavy part of the workload (splitting individual layers across GPUs) within the NVLink domain, where it's fast and invisible to network monitoring. Data parallelism synchronizes across racks using InfiniBand, which is observable. This is the standard parallelism strategy precisely because it aligns the heaviest communication with the fastest interconnect. For verification, this means the observable InfiniBand traffic only represents the data-parallel component — the tensor-parallel communication within each NVLink domain is a blind spot."
+/>
+
+## Bandwidth and Latency at Each Level
+
+The numbers at each level of the hierarchy differ by orders of magnitude:
+
+| Level | Bandwidth (per link/GPU) | Latency (typical) | Observable? |
+|-------|-------------------------|--------------------|-------------|
+| HBM (GPU memory) | 8 TB/s | ~ns | Only via DCGM |
+| NVLink (intra-domain) | 900 GB/s bidirectional | ~1-2 us | Not via network monitoring |
+| InfiniBand (inter-rack) | 400 Gb/s (50 GB/s) | ~1-5 us | Yes — SmartNIC, switch, TAP |
+| WAN (inter-DC) | 10-400 Gb/s | ~ms | Yes — all standard methods |
+
+Notice the 18:1 bandwidth ratio between NVLink (900 GB/s) and InfiniBand (50 GB/s). This is why parallelism strategies are designed to keep the most communication-intensive operations within the NVLink domain — and it's also why the NVLink domain is a natural boundary for verification architectures.
+
+## Parallelism Strategies and Network Usage
+
+Modern training runs use multiple parallelism strategies simultaneously, each with different communication patterns and network usage:
+
+### Data Parallelism
+Every GPU holds a complete copy of the model. Each processes different data and synchronizes gradients via **all-reduce**. Communication volume scales with model size. This traffic predominantly flows over InfiniBand (between NVLink domains).
+
+### Tensor Parallelism
+Individual model layers are split across GPUs within an NVLink domain. Requires constant communication during both forward and backward passes. Very high bandwidth requirements — this is placed on NVLink precisely because InfiniBand isn't fast enough.
+
+### Pipeline Parallelism
+Different layers of the model are placed on different groups of GPUs. Communication happens between pipeline stages (activation transfers). Moderate bandwidth, but latency-sensitive. Typically placed on InfiniBand between NVLink domains.
+
+### Expert Parallelism (Mixture of Experts)
+Different "expert" sub-networks are on different GPUs. Routing sends each token to the relevant expert. Communication patterns are dynamic and less predictable than the strategies above.
+
+<ConceptCheck
+  question="A verification system wants to estimate the total compute being used by a training run. It can observe InfiniBand traffic patterns but not NVLink traffic. Which parallelism strategy creates the most accurate picture of the training run from InfiniBand data alone?"
+  options={[
+    {label: "(a) Pure data parallelism — all gradient synchronization flows over InfiniBand, giving a complete picture", correct: true},
+    {label: "(b) Pure tensor parallelism — the fine-grained layer splits create the most distinctive traffic signature"},
+    {label: "(c) Pipeline parallelism — the stage-to-stage transfers reveal the model architecture"},
+    {label: "(d) The parallelism strategy doesn't matter; InfiniBand traffic tells the same story regardless"},
+  ]}
+  explanation="Pure data parallelism puts all inter-GPU communication on InfiniBand (assuming one GPU per NVLink domain, which is unrealistic for modern clusters but illustrates the principle). Each all-reduce is proportional to model size and happens every training step, giving a clear, regular signal. With tensor parallelism, the heaviest communication is on NVLink and invisible to the IB observer. In practice, modern clusters use a combination, meaning IB monitoring only sees the data-parallel and pipeline-parallel components — the tensor-parallel traffic within NVLink domains is a blind spot."
+/>
+
+## Fabric Topology: Fat Trees and Clos Networks
+
+The InfiniBand fabric that connects racks uses a **fat-tree topology** (technically a folded Clos network). Understanding this topology matters for both performance and verification.
+
+A fat-tree has three layers:
+1. **Leaf switches** — Connect directly to the compute nodes (NVL72 racks). Each rack connects to one or more leaf switches.
+2. **Spine switches** — Connect to all leaf switches in the same pod. Provide any-to-any connectivity within a pod.
+3. **Core switches** (in larger fabrics) — Connect pods to each other. Provide any-to-any connectivity across the entire fabric.
+
+The key property of a fat-tree is **full bisection bandwidth**: any half of the compute nodes can communicate with the other half at the full per-node bandwidth. There's no over-subscription — the fabric doesn't create bottlenecks.
+
+In practice, large clusters may use **tapered** fat trees where upper layers have less bandwidth than lower layers. This saves cost on switches and cables at the expense of performance for traffic patterns that cross higher tiers. The taper ratio is an important design parameter that affects both training performance and the traffic patterns visible to monitoring.
+
+<ConceptCheck
+  question="In a fat-tree InfiniBand fabric, two racks in the same pod communicate through leaf and spine switches. Two racks in different pods communicate through leaf, spine, and core switches. From a verification perspective, which traffic is easier to monitor and why?"
+  options={[
+    {label: "(a) Same-pod traffic, because it passes through fewer switches"},
+    {label: "(b) Cross-pod traffic, because it passes through core switches which are natural monitoring chokepoints", correct: true},
+    {label: "(c) They're equally easy — all traffic goes through switches that can be monitored"},
+    {label: "(d) Neither is easy — fat-tree traffic is load-balanced across many paths"},
+  ]}
+  explanation="Cross-pod traffic must pass through the core switch layer, which is a relatively small number of switches that carry all inter-pod traffic. This creates a natural monitoring chokepoint. Same-pod traffic is distributed across many spine switches, making comprehensive monitoring harder. However, option (d) has a point — ECMP (Equal-Cost Multi-Path) routing distributes traffic across parallel paths, so no single switch sees all traffic between two endpoints. Effective monitoring at scale requires aggregating data from multiple switches."
+/>
+
+## The Ethernet Alternative
+
+While InfiniBand dominates in high-performance AI clusters, **high-performance Ethernet** (with RDMA over Converged Ethernet, or RoCE) is an increasingly viable alternative, particularly in cloud environments:
+
+| Property | InfiniBand (NDR) | High-Performance Ethernet (800GbE) |
+|----------|-----------------|-------------------------------------|
+| Bandwidth | 400 Gb/s per port | 800 Gb/s per port |
+| Latency | ~1-2 us | ~2-5 us |
+| RDMA | Native (iWARP/IBoIP) | RoCE v2 |
+| Management | UFM | Standard Ethernet tools |
+| Ecosystem | NVIDIA-centric | Multi-vendor |
+| Lossless fabric | Credit-based flow control | PFC/ECN (more complex to configure) |
+
+For verification purposes, Ethernet-based clusters are potentially easier to monitor because the tooling ecosystem is larger and more standardized. However, the NVLink visibility boundary exists regardless of which external network is used.
+
+## What This Means for Verification
+
+The interconnect architecture creates a fundamental challenge for verification:
+
+1. **The NVLink blind spot is structural.** It's not a limitation of current monitoring tools — it's a consequence of NVLink being a proprietary interconnect that doesn't pass through any inspectable network infrastructure. This blind spot grows as NVLink domains get larger.
+
+2. **InfiniBand traffic patterns are highly informative.** The communication pattern of a training run (regular all-reduce operations, pipeline stage transfers) creates a distinctive signature on the InfiniBand fabric. Deviations from expected patterns could indicate different workloads than claimed.
+
+3. **Parallelism strategy determines visibility.** The choice of how to distribute a training job across the topology directly determines what fraction of the communication is visible on InfiniBand vs. hidden on NVLink.
+
+4. **Bandwidth ratios constrain evasion.** The 18:1 NVLink-to-IB bandwidth ratio means that operators can't easily move NVLink-class communication to InfiniBand — there isn't enough bandwidth. This physical constraint limits some forms of misrepresentation.
+
+<Scenario
+  title="Monitoring a multi-tenant training facility"
+  prompt="You are designing a verification system for a national AI compute facility that hosts training runs from multiple organizations. The facility uses NVL72 racks with an InfiniBand fat-tree fabric. Each tenant gets allocated a specific set of racks. You have access to SmartNIC telemetry on every InfiniBand port and switch counters on the entire fabric. You do NOT have access to anything inside the NVLink domain (no DCGM, no host access)."
+  questions={[
+    "What can you determine about each tenant's training activity from InfiniBand data alone?",
+    "Can you detect if a tenant is using more GPUs than their allocation?",
+    "Can you detect if two tenants are secretly sharing data or coordinating their training runs?",
+    "What are the fundamental limitations of your monitoring, and how would you address them?",
+  ]}
+  hints={<span>From IB data you can determine: traffic volume and timing patterns (revealing training step cadence), which racks are communicating (topology of the job), and approximate data movement rates (indicating model size for data-parallel all-reduce). You CAN likely detect cross-allocation GPU usage because the unauthorized racks would show unexpected IB traffic. You CAN likely detect cross-tenant coordination because you'd see traffic between racks belonging to different tenants. Fundamental limitations: you cannot see what's happening within each NVLink domain (72 GPUs worth of compute per rack is a black box), so you can't verify tensor-parallel decomposition, actual model architecture, or training efficiency. To address this, you'd need either (a) host-level access for DCGM telemetry with integrity guarantees, or (b) indirect indicators like BMC power draw correlated with IB traffic patterns.</span>}
+/>
+
+<Scenario
+  title="The NVLink domain scale problem"
+  prompt="NVIDIA's roadmap suggests NVLink domains will continue growing — from 8 GPUs (DGX A100) to 72 GPUs (NVL72) to potentially 576+ GPUs in future generations. A verification framework designed today monitors InfiniBand traffic to characterize training runs."
+  questions={[
+    "As NVLink domains grow to 576 GPUs, what happens to the fraction of training communication that's visible via InfiniBand monitoring?",
+    "At what NVLink domain size does InfiniBand monitoring become insufficient for meaningful verification?",
+    "What alternative verification approaches should be developed now to remain viable as NVLink domains scale?",
+  ]}
+  hints={<span>As NVLink domains grow, more of the training job fits within a single domain — meaning more communication happens on NVLink (invisible) and less on InfiniBand (observable). For a 576-GPU NVLink domain, a training run that fits entirely within the domain would produce minimal InfiniBand traffic (just checkpoint saves and parameter server communication). InfiniBand monitoring becomes insufficient when the NVLink domain is large enough to host an entire training job — at that point, you're blind to the core computation. Alternative approaches: hardware-level telemetry (BMC, power metering), NVIDIA-cooperative firmware monitoring, trusted execution environments, or physical monitoring (power signatures correlated with known training workload profiles). This is one of the most important open problems in compute verification.</span>}
+/>
+
+---
+
+*Next: [Chapter 03 — Cluster Management](/docs/cluster-management) — how the software stack coordinates thousands of GPUs.*

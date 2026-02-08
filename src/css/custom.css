@@ -1,0 +1,297 @@
+:root {
+  --ifm-color-primary: #1a3a5c;
+  --ifm-color-primary-dark: #173351;
+  --ifm-color-primary-darker: #15304d;
+  --ifm-color-primary-darkest: #11273f;
+  --ifm-color-primary-light: #1d4167;
+  --ifm-color-primary-lighter: #1f446b;
+  --ifm-color-primary-lightest: #254f7c;
+  --ifm-code-font-size: 95%;
+  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #5b9bd5;
+  --ifm-color-primary-dark: #4490d0;
+  --ifm-color-primary-darker: #3989cd;
+  --ifm-color-primary-darkest: #2871b2;
+  --ifm-color-primary-light: #72a6da;
+  --ifm-color-primary-lighter: #7daddd;
+  --ifm-color-primary-lightest: #a0c4e7;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Concept Check styling */
+.concept-check {
+  border: 2px solid var(--ifm-color-primary-lightest);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+  background: var(--ifm-background-surface-color);
+}
+
+.concept-check__header {
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ifm-color-primary);
+  margin-bottom: 0.75rem;
+}
+
+.concept-check__question {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.concept-check__option {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  margin: 0.35rem 0;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+  line-height: 1.5;
+}
+
+.concept-check__option:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.concept-check__option--selected {
+  border-color: var(--ifm-color-primary);
+  background: var(--ifm-color-emphasis-100);
+}
+
+.concept-check__option--correct {
+  border-color: #2e7d32;
+  background: rgba(46, 125, 50, 0.08);
+}
+
+.concept-check__option--incorrect {
+  border-color: #c62828;
+  background: rgba(198, 40, 40, 0.08);
+}
+
+.concept-check__explanation {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--ifm-color-primary);
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Scenario styling */
+.scenario {
+  border: 2px solid #e65100;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  background: var(--ifm-background-surface-color);
+}
+
+[data-theme='dark'] .scenario {
+  border-color: #ff9800;
+}
+
+.scenario__header {
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #e65100;
+  margin-bottom: 0.75rem;
+}
+
+[data-theme='dark'] .scenario__header {
+  color: #ff9800;
+}
+
+.scenario__prompt {
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.scenario__questions {
+  padding-left: 1.25rem;
+}
+
+.scenario__questions li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.scenario__toggle {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: 1px solid var(--ifm-color-primary);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ifm-color-primary);
+  margin-top: 0.5rem;
+  transition: background 0.15s;
+}
+
+.scenario__toggle:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.scenario__hints {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #e65100;
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+[data-theme='dark'] .scenario__hints {
+  border-color: #ff9800;
+}
+
+/* Topology Explorer styling */
+.topology-explorer {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  background: var(--ifm-background-surface-color);
+}
+
+.topology-explorer__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.topology-explorer__title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.topology-explorer__controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.topology-explorer__btn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.topology-explorer__btn:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.topology-explorer__btn--active {
+  background: var(--ifm-color-primary);
+  color: #fff;
+  border-color: var(--ifm-color-primary);
+}
+
+.topology-explorer__diagram {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.topology-explorer__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.topology-explorer__stat {
+  padding: 0.75rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.topology-explorer__stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.topology-explorer__stat-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--ifm-color-primary);
+  margin-top: 0.25rem;
+}
+
+.topology-explorer__note {
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-600);
+  margin-top: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 4px;
+  line-height: 1.6;
+}
+
+/* Homepage */
+.hero-field-guide {
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.hero-field-guide__subtitle {
+  max-width: 640px;
+  margin: 0 auto;
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  padding: 1.5rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+}
+
+.feature-card h3 {
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+
+.feature-card p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ifm-color-emphasis-700);
+  margin-bottom: 0;
+}

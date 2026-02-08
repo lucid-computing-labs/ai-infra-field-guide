@@ -1,0 +1,117 @@
+---
+sidebar_position: 2
+title: "Physical Architecture"
+---
+
+import ConceptCheck from '@site/src/components/ConceptCheck';
+import Scenario from '@site/src/components/Scenario';
+
+# Chapter 01: Physical Architecture
+
+> *Racks, cooling, power delivery, and why modern AI clusters look nothing like the data centers you've seen in stock photos.*
+
+:::info Status
+This chapter is under active development. The structure and key concepts are in place; detailed prose, verified numbers, and firsthand practitioner details are being added. [Contributions welcome.](https://github.com/lucid-labs/ai-infra-field-guide/blob/main/CONTRIBUTING.md)
+:::
+
+## The Power Problem
+
+Everything about modern AI infrastructure starts with power. A single NVIDIA GB200 NVL72 rack — 72 Blackwell GPUs in one liquid-cooled cabinet — draws approximately **132 kW**. For context, a typical server rack in a traditional data center draws 7-15 kW. A single AI training rack consumes roughly as much power as 10-15 traditional server racks.
+
+This isn't an incremental change. It's a phase transition in data center design. Every decision downstream — cooling, physical layout, electrical infrastructure, even the building itself — flows from this power density.
+
+### The Generation Gap
+
+| Generation | GPU | Rack Power (typical) | Cooling | Year |
+|-----------|-----|---------------------|---------|------|
+| Ampere | A100 | ~6-10 kW per node | Air-cooled | 2020 |
+| Hopper | H100 | ~10-15 kW per node | Air or liquid | 2022 |
+| Blackwell | B200/GB200 | ~40-132 kW per rack | Liquid required | 2024 |
+| Rubin (projected) | R100 | Higher | Liquid required | 2026+ |
+
+The jump from Hopper to Blackwell is where air cooling became physically impossible at rack scale. You cannot move enough air through a cabinet to dissipate 132 kW — the physics don't work. This forced the entire industry onto liquid cooling in a single generation.
+
+<ConceptCheck
+  question="A facility operator is planning to retrofit an existing air-cooled data center to support GB200 NVL72 racks. Beyond the cooling system itself, what is the most likely bottleneck they'll hit first?"
+  options={[
+    {label: "(a) Network bandwidth — the existing switches can't handle the traffic"},
+    {label: "(b) Electrical capacity — the power distribution wasn't designed for 132 kW per rack", correct: true},
+    {label: "(c) Floor space — the racks are physically larger than standard server racks"},
+    {label: "(d) Software — the existing cluster management tools don't support Blackwell GPUs"},
+  ]}
+  explanation="Electrical infrastructure is the binding constraint. Most existing data centers were designed for 7-15 kW per rack. The switchgear, bus bars, PDUs, and utility feeds all need to be sized for the new load. You can't just swap in new cooling — you need to fundamentally redesign the power delivery chain. Floor space is rarely the issue (NVL72 racks use a standard 52U form factor), and network/software are solvable problems."
+/>
+
+## Liquid Cooling Fundamentals
+
+Modern AI racks use **direct liquid cooling (DLC)**, where coolant flows through cold plates mounted directly on the GPU dies and other heat-producing components. This is fundamentally different from rear-door heat exchangers or in-row cooling units that some facilities used as a bridge solution.
+
+In a DLC system:
+- **Coolant** (typically a propylene glycol/water mix) circulates through the rack via supply and return manifolds.
+- **Cold plates** sit on top of each GPU die, absorbing heat directly through conduction.
+- **Coolant Distribution Units (CDUs)** exchange heat from the facility loop to the rack-level loop.
+- A **facility water loop** carries the heat to cooling towers or chillers outside the building.
+
+The key advantage: liquid has ~3,500x the volumetric heat capacity of air. This means you can remove far more heat through a small pipe than through a large air duct.
+
+<ConceptCheck
+  question="Why did NVIDIA move to liquid cooling for the GB200 NVL72 rather than simply using more powerful fans?"
+  options={[
+    {label: "(a) Fans are too noisy for modern data centers"},
+    {label: "(b) The heat density exceeds what air can physically remove at rack scale, regardless of fan speed", correct: true},
+    {label: "(c) Liquid cooling is cheaper to operate than air cooling"},
+    {label: "(d) Air cooling creates electromagnetic interference that affects GPU computation"},
+  ]}
+  explanation="This is a physics constraint, not a preference. At 132 kW in a single rack, the power density is beyond what air can dissipate regardless of airflow rate. The air would need to be moving at speeds that create their own engineering problems (noise, vibration, pressure drop). Liquid cooling solves this because liquid can carry orders of magnitude more heat per unit volume than air."
+/>
+
+## Power Delivery Chain
+
+Power flows through a series of transformations before reaching a GPU:
+
+1. **Utility feed** — High voltage (typically 13.8 kV or higher) from the grid
+2. **Substation** — Steps down to medium voltage (e.g., 480V in the US)
+3. **Uninterruptible Power Supply (UPS)** — Battery backup for continuity
+4. **Power Distribution Unit (PDU)** — Steps down and distributes to rack level
+5. **Power Supply Unit (PSU)** — Converts to the DC voltages the GPUs need (typically 12V or 48V)
+
+Each transformation loses some energy as heat. Total facility efficiency is measured as **Power Usage Effectiveness (PUE)**:
+
+> **PUE = Total Facility Power / IT Equipment Power**
+
+A PUE of 1.0 would mean zero overhead — every watt goes to compute. State-of-the-art AI facilities target PUE of 1.1-1.2, meaning 10-20% of total power goes to cooling, lighting, and other facility overhead.
+
+<ConceptCheck
+  question="A 100 MW AI data center has a PUE of 1.15. How much power actually reaches the IT equipment?"
+  options={[
+    {label: "(a) 100 MW"},
+    {label: "(b) 115 MW"},
+    {label: "(c) ~87 MW", correct: true},
+    {label: "(d) ~85 MW"},
+  ]}
+  explanation={<span>PUE = Total / IT, so IT = Total / PUE = 100 / 1.15 &asymp; 87 MW. The remaining ~13 MW goes to cooling infrastructure, power conversion losses, lighting, and other facility systems. This is why PUE matters enormously at scale — that 15% overhead at 100 MW means 15 MW of power (and the associated cost and infrastructure) that doesn't contribute to computation.</span>}
+/>
+
+## Facility Design Implications
+
+The physical constraints cascade upward into every aspect of facility planning:
+
+- **Site selection** is driven primarily by power availability and cost. You need reliable access to hundreds of megawatts, ideally with renewable energy commitments.
+- **Water availability** matters for cooling towers (evaporative cooling is the most efficient way to reject heat to the environment).
+- **Physical security** is critical — a single AI training cluster can represent billions of dollars of capital equipment in a relatively compact space.
+- **Redundancy** (N+1 or 2N power and cooling) is expected for production training runs that may take months. An unplanned outage during a multi-month training run can waste weeks of compute.
+
+<Scenario
+  title="Capacity planning for a new AI facility"
+  prompt="You are advising a government agency that wants to build a national AI research facility capable of hosting 10,000 Blackwell-class GPUs. They've identified a site with 50 MW of available grid power and municipal water access."
+  questions={[
+    "Is 50 MW sufficient? What assumptions do you need to make to answer this?",
+    "What are the key physical infrastructure decisions they need to make in the first 6 months?",
+    "What facility-level monitoring would you recommend for verification and governance purposes?",
+  ]}
+  hints={<span>Consider: 10,000 GPUs at Blackwell density is roughly 139 NVL72 racks. At 132 kW per rack, that's ~18.3 MW of IT load alone. With PUE of 1.15, total facility power is ~21 MW — so 50 MW is sufficient for this deployment with room for growth. Key decisions include cooling architecture (DLC is mandatory), electrical topology (redundancy level), and physical layout. For verification, consider power metering at the rack level (can verify compute is happening where claimed), physical access controls with audit logs, and network monitoring at the IB fabric level.</span>}
+/>
+
+---
+
+*Next: [Chapter 02 — Interconnects](/docs/interconnects) — the most misunderstood layer, and where verification gets interesting.*
