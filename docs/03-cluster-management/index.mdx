@@ -1,0 +1,108 @@
+---
+sidebar_position: 4
+title: "Cluster Management"
+---
+
+import ConceptCheck from '@site/src/components/ConceptCheck';
+import Scenario from '@site/src/components/Scenario';
+
+# Chapter 03: Cluster Management
+
+> *Schedulers, orchestration, health monitoring, and the software that turns thousands of individual GPUs into a single coherent training system.*
+
+:::info Status
+This chapter is under active development. The structure and key concepts are in place; detailed prose and practitioner details are being added. [Contributions welcome.](https://github.com/lucid-labs/ai-infra-field-guide/blob/main/CONTRIBUTING.md)
+:::
+
+## The Coordination Problem
+
+A modern training run uses thousands of GPUs executing a single computation in parallel. Unlike traditional HPC workloads or web services, large-model training has a distinctive property: **every GPU must stay in lockstep**. If one GPU falls behind, every other GPU waits. If one GPU fails, the entire job must checkpoint and restart.
+
+This creates a fundamentally different management challenge than running a web service where individual server failures are invisible to users.
+
+## Job Scheduling
+
+### Cluster Schedulers
+
+Large AI clusters use specialized schedulers to allocate GPUs to training jobs. Common systems include:
+
+- **Slurm** — The dominant HPC scheduler, widely used in academic and government clusters. Allocates nodes, manages queues, handles job dependencies.
+- **Kubernetes + custom operators** — Increasingly used in cloud and enterprise settings. Projects like Volcano and KubeFlow add GPU-aware scheduling to Kubernetes.
+- **Proprietary schedulers** — Large labs (Google, Meta) often run custom systems optimized for their specific hardware and workload patterns.
+
+The key scheduling constraint for training jobs is **topology-aware placement**. A 1,024-GPU training job doesn't just need any 1,024 GPUs — it needs GPUs that are topologically close in the network fabric to minimize communication latency. Placing a job across two different SuperPODs when it could fit in one dramatically increases all-reduce latency.
+
+<ConceptCheck
+  question="A cluster has 2,048 GPUs across two SuperPODs (1,024 each). A training job requires 1,500 GPUs. Why is this scheduling scenario particularly difficult?"
+  options={[
+    {label: "(a) The cluster doesn't have enough GPUs"},
+    {label: "(b) The job must span both SuperPODs, incurring cross-SuperPOD communication latency for every gradient synchronization step", correct: true},
+    {label: "(c) Slurm can't handle jobs larger than 1,024 GPUs"},
+    {label: "(d) The job needs more memory than 1,500 GPUs can provide"},
+  ]}
+  explanation="The job needs 1,500 GPUs but no single SuperPOD has more than 1,024, so it must span both. Every all-reduce synchronization step now includes cross-SuperPOD traffic, which has higher latency than intra-SuperPOD communication. A topology-aware scheduler would flag this and either (a) wait for a better placement if possible, or (b) configure the collective communication library to account for the topology. This is why scheduling for training is fundamentally harder than scheduling for inference — placement quality directly impacts job performance."
+/>
+
+## Health Monitoring and Failure Recovery
+
+### Failure Rates at Scale
+
+At the scale of modern training clusters, hardware failures are not exceptional events — they're a constant background condition. With thousands of GPUs, each containing billions of transistors plus memory, interconnects, and power delivery, component failures happen regularly.
+
+Common failure modes include:
+- **GPU errors** — Uncorrectable ECC errors in HBM, thermal throttling, hardware faults
+- **Network link failures** — InfiniBand cable degradation, switch port failures, connector issues
+- **Node-level failures** — PSU failures, DIMM errors, NVLink errors, OS crashes
+- **Cooling anomalies** — Coolant flow disruptions, pump failures, leak detection
+
+### Checkpointing
+
+Because a single GPU failure stops the entire training job, large training runs use periodic **checkpointing** — saving the complete model state (weights, optimizer state, learning rate schedule position) to persistent storage at regular intervals.
+
+When a failure occurs:
+1. The job stops on all GPUs.
+2. The failed hardware is identified and excluded.
+3. The job is rescheduled on healthy hardware (possibly with a different GPU allocation).
+4. Training resumes from the most recent checkpoint.
+
+The time between the last checkpoint and the failure is lost compute. This makes checkpoint frequency an important optimization parameter: too frequent and you waste time writing checkpoints; too infrequent and you lose more compute when failures occur.
+
+<ConceptCheck
+  question="A training run checkpoints every 30 minutes. If the mean time between failures across the entire cluster is 4 hours, approximately what fraction of compute is lost to failure recovery (ignoring checkpoint writing time)?"
+  options={[
+    {label: "(a) ~6% — about 15 minutes lost per 4-hour interval", correct: true},
+    {label: "(b) ~12.5% — about 30 minutes lost per 4-hour interval"},
+    {label: "(c) ~50% — half the time is spent recovering"},
+    {label: "(d) Negligible — checkpoint recovery is instant"},
+  ]}
+  explanation="With 30-minute checkpoint intervals and a failure every 4 hours on average, each failure loses on average 15 minutes of compute (half the checkpoint interval, since the failure is equally likely at any point). Over 4 hours (240 minutes), 15 minutes is ~6%. In practice, the actual overhead is higher because checkpoint writing itself takes time, job restart has overhead, and failure detection isn't instant. At scale, teams obsess over reducing this overhead."
+/>
+
+## Observability Stack
+
+Monitoring a large training cluster requires instrumentation at every level:
+
+| Layer | What's Monitored | Tools |
+|-------|-----------------|-------|
+| GPU | Temperature, power draw, memory utilization, SM activity, ECC errors | DCGM, nvidia-smi, custom exporters |
+| Node | CPU, system memory, disk I/O, NVLink status | Prometheus node_exporter, custom agents |
+| Network | Link utilization, error counters, congestion signals | UFM (InfiniBand), SmartNIC telemetry |
+| Job | Throughput (tokens/sec), loss curves, gradient norms | Training framework metrics, W&B, custom |
+| Facility | Power draw, coolant temperature, flow rates | BMS (Building Management System), IPMI/BMC |
+
+This telemetry data is valuable for both operations and verification. It can reveal whether a cluster is actually running the workload it claims to be running — a topic we explore in depth in [Chapter 04](/docs/verification).
+
+<Scenario
+  title="Diagnosing a training slowdown"
+  prompt="You're operating a 4,096-GPU training run. Over the last 12 hours, training throughput (measured in tokens processed per second) has gradually declined by 15%. No hardware failures have been reported by the monitoring system."
+  questions={[
+    "What are the most likely causes of a gradual throughput decline without reported hardware failures?",
+    "What telemetry would you examine first, and in what order?",
+    "How could this scenario be relevant to verification — i.e., how could you distinguish a legitimate slowdown from deliberate resource diversion?",
+  ]}
+  hints={<span>Common causes of gradual degradation include: thermal throttling (GPU temperatures creeping up due to cooling system degradation or ambient temperature changes), network congestion from a competing job on shared fabric, a degrading but not yet failed IB link causing retransmissions, or memory errors that trigger slower ECC correction paths. For verification, the key question is whether the telemetry data is self-consistent — does the power draw match the claimed workload? Does the network traffic pattern match the expected collective communication of the training job? Deliberate diversion would likely show inconsistencies in these cross-checks.</span>}
+/>
+
+---
+
+*Next: [Chapter 04 — Verification Relevance](/docs/verification) — what all of this means for AI governance and safety verification.*
