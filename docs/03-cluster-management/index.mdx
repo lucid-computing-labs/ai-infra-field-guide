@@ -6,6 +6,7 @@ title: "Cluster Management"
 import ConceptCheck from '@site/src/components/ConceptCheck';
 import Scenario from '@site/src/components/Scenario';
 import FlopCalculator from '@site/src/components/FlopCalculator';
+import KeyNumber, {KeyNumberRow} from '@site/src/components/KeyNumber';
 
 # Chapter 03: Cluster Management
 
@@ -96,6 +97,12 @@ At the scale of modern training clusters, hardware failures are not exceptional 
 
 Published data from large-scale training runs gives us a sense of the failure landscape:
 
+<KeyNumberRow>
+  <KeyNumber value="~1 hr" label="Cluster MTBF" context="10,000-GPU cluster" />
+  <KeyNumber value="10,000+ hrs" label="Single GPU MTBF" context="Individual component" />
+  <KeyNumber value="30-55%" label="Typical MFU" context="Model FLOP Utilization" />
+</KeyNumberRow>
+
 - **Mean time between failure (MTBF)** for a 10,000-GPU cluster is measured in hours, not days. Individual GPUs may have MTBF of 10,000+ hours, but with 10,000 of them running simultaneously, the cluster MTBF is roughly 1 hour.
 - **Silent data corruption** — GPUs producing wrong results without reporting errors — is a growing concern. It's been documented by both Meta and Google in large-scale runs. These are the hardest failures to detect because the job keeps running but produces garbage gradients.
 - **Cascading failures** are common in tightly coupled systems. A failed power supply can take down a node, which triggers a checkpoint-and-restart for the job, which creates a burst of storage I/O, which can cause other jobs to slow down.
@@ -111,6 +118,18 @@ Common failure modes include:
 Because a single GPU failure stops the entire training job, large training runs use periodic **checkpointing** — saving the complete model state (weights, optimizer state, learning rate schedule position) to persistent storage at regular intervals.
 
 When a failure occurs:
+
+```mermaid
+flowchart LR
+    A["GPU Failure\nDetected"] --> B["Job Stops\non All GPUs"]
+    B --> C["Identify & Exclude\nFailed Hardware"]
+    C --> D["Reschedule\non Healthy GPUs"]
+    D --> E["Resume from\nLatest Checkpoint"]
+    E --> F["Training\nContinues"]
+    style A fill:#c62828,color:#fff
+    style F fill:#2e7d32,color:#fff
+```
+
 1. The job stops on all GPUs.
 2. The failed hardware is identified and excluded.
 3. The job is rescheduled on healthy hardware (possibly with a different GPU allocation).

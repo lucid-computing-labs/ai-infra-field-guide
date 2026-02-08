@@ -11,6 +11,14 @@ const config: Config = {
     v4: true,
   },
 
+  markdown: {
+    mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
+  },
+  themes: ['@docusaurus/theme-mermaid'],
+
   url: 'https://lucid-computing-labs.github.io',
   baseUrl: '/ai-infra-field-guide/',
 
@@ -18,12 +26,6 @@ const config: Config = {
   projectName: 'ai-infra-field-guide',
 
   onBrokenLinks: 'throw',
-
-  markdown: {
-    hooks: {
-      onBrokenMarkdownLinks: 'warn',
-    },
-  },
 
   i18n: {
     defaultLocale: 'en',
@@ -40,6 +42,7 @@ const config: Config = {
             'https://github.com/lucid-computing-labs/ai-infra-field-guide/edit/main/',
           remarkPlugins: [],
           rehypePlugins: [],
+          showLastUpdateTime: true,
         },
         blog: false,
         theme: {

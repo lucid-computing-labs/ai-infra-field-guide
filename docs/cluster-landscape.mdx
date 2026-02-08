@@ -4,6 +4,9 @@ title: "The Cluster Landscape"
 slug: /cluster-landscape
 ---
 
+import ClusterTable from '@site/src/components/ClusterTable';
+import KeyNumber, {KeyNumberRow} from '@site/src/components/KeyNumber';
+
 # The Cluster Landscape
 
 > *The largest AI compute installations in the world — what's operational, what's under construction, and what the numbers actually mean.*
@@ -14,7 +17,23 @@ This page catalogs the largest known AI compute clusters based on publicly avail
 GPU counts and power figures come from company announcements, press reports, and industry databases. Companies have incentives to overstate their deployments. "Planned" figures are aspirational and subject to change. Where possible, we note the source and confidence level. The Epoch AI GPU Clusters database[^epoch-dataset] is the most comprehensive open tracker and estimates it covers only 10-20% of global cluster capacity.[^epoch-coverage]
 :::
 
-## Operational Clusters
+## Quick Reference
+
+Search, filter, and explore the world's largest AI compute clusters. Click any card for full details.
+
+<ClusterTable />
+
+<KeyNumberRow>
+  <KeyNumber value="74.5%" label="US Share" context="Of global GPU cluster performance" />
+  <KeyNumber value="~80%" label="Private Sector" context="Share of global AI compute" />
+  <KeyNumber value="10-20%" label="Dataset Coverage" context="Epoch AI's estimated coverage" />
+</KeyNumberRow>
+
+---
+
+## Detailed Profiles
+
+### Operational Clusters
 
 These clusters are confirmed to be running production workloads as of early 2026.
 
@@ -72,7 +91,7 @@ The system contains 11,136 nodes with 44,544 AMD Instinct MI300A APUs — each c
 
 But the striking fact is this: El Capitan's total compute capacity is less than a quarter of xAI's Colossus.[^epoch-comparison] This gap between public-sector and private-sector AI compute is one of the defining trends in the field and has significant implications for government verification capabilities. El Capitan is also notable for using AMD rather than NVIDIA hardware, built by HPE in partnership with Lawrence Livermore National Laboratory for the US Department of Energy's nuclear stockpile stewardship program.[^elcapitan-mission]
 
-## Planned and Under Construction
+### Planned and Under Construction
 
 These deployments have been announced and have construction underway or completed, with target dates in 2026-2027.
 

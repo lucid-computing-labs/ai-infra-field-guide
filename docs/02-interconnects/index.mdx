@@ -6,6 +6,7 @@ title: "Interconnects"
 import ConceptCheck from '@site/src/components/ConceptCheck';
 import Scenario from '@site/src/components/Scenario';
 import TopologyExplorer from '@site/src/components/TopologyExplorer';
+import KeyNumber, {KeyNumberRow} from '@site/src/components/KeyNumber';
 
 # Chapter 02: Interconnects
 
@@ -39,9 +40,34 @@ If the interconnect is slow, every GPU sits idle waiting for the communication t
 
 Modern NVIDIA AI clusters use **two fundamentally different networks** at different scales. Understanding this split is essential.
 
+```mermaid
+flowchart TB
+    subgraph NVLinkDomain["NVLink Domain (INVISIBLE to network monitoring)"]
+        direction LR
+        GPU1["GPU 1"] <-->|"NVLink\n900 GB/s"| NVS["NVSwitch"]
+        GPU2["GPU 2"] <-->|"NVLink\n900 GB/s"| NVS
+        GPU3["GPU ..."] <-->|"NVLink\n900 GB/s"| NVS
+        GPU72["GPU 72"] <-->|"NVLink\n900 GB/s"| NVS
+    end
+    subgraph IBFabric["InfiniBand Fabric (OBSERVABLE)"]
+        direction LR
+        LS1["Leaf Switch"] <-->|"IB NDR\n400 Gb/s"| SS1["Spine Switch"]
+        LS2["Leaf Switch"] <-->|"IB NDR\n400 Gb/s"| SS1
+    end
+    NVLinkDomain -->|"ConnectX NIC"| LS1
+    style NVLinkDomain fill:#1a237e,color:#fff
+    style IBFabric fill:#1b5e20,color:#fff
+```
+
 ### NVLink: The Internal Network
 
 NVLink is NVIDIA's proprietary GPU-to-GPU interconnect. In the Blackwell generation:
+
+<KeyNumberRow>
+  <KeyNumber value="900 GB/s" label="NVLink Bandwidth" context="Bidirectional per GPU" />
+  <KeyNumber value="1-2 \u00B5s" label="NVLink Latency" context="Sub-microsecond" />
+  <KeyNumber value="72 GPUs" label="Domain Size" context="NVL72 all-to-all via NVSwitch" />
+</KeyNumberRow>
 
 - **Bandwidth:** 900 GB/s bidirectional per GPU (1.8 TB/s aggregate)
 - **Latency:** ~1-2 microseconds
@@ -131,6 +157,10 @@ The numbers at each level of the hierarchy differ by orders of magnitude:
 | InfiniBand (inter-rack) | 400 Gb/s (50 GB/s) | ~1-5 us | Yes — SmartNIC, switch, TAP |
 | WAN (inter-DC) | 10-400 Gb/s | ~ms | Yes — all standard methods |
 
+<KeyNumberRow>
+  <KeyNumber value="18:1" label="Bandwidth Ratio" context="NVLink (900 GB/s) vs IB (50 GB/s)" />
+</KeyNumberRow>
+
 Notice the 18:1 bandwidth ratio between NVLink (900 GB/s) and InfiniBand (50 GB/s). This is why parallelism strategies are designed to keep the most communication-intensive operations within the NVLink domain — and it's also why the NVLink domain is a natural boundary for verification architectures.
 
 ## Parallelism Strategies and Network Usage
@@ -165,6 +195,36 @@ Different "expert" sub-networks are on different GPUs. Routing sends each token 
 The InfiniBand fabric that connects racks uses a **fat-tree topology** (technically a folded Clos network). Understanding this topology matters for both performance and verification.
 
 A fat-tree has three layers:
+
+```mermaid
+flowchart TB
+    C1["Core Switch"] --- S1["Spine 1"]
+    C1 --- S2["Spine 2"]
+    C1 --- S3["Spine 3"]
+    C1 --- S4["Spine 4"]
+    S1 --- L1["Leaf 1"]
+    S1 --- L2["Leaf 2"]
+    S2 --- L1
+    S2 --- L2
+    S3 --- L3["Leaf 3"]
+    S3 --- L4["Leaf 4"]
+    S4 --- L3
+    S4 --- L4
+    L1 --- R1["Rack 1\n(NVL72)"]
+    L1 --- R2["Rack 2\n(NVL72)"]
+    L2 --- R3["Rack 3\n(NVL72)"]
+    L2 --- R4["Rack 4\n(NVL72)"]
+    L3 --- R5["Rack 5\n(NVL72)"]
+    L3 --- R6["Rack 6\n(NVL72)"]
+    L4 --- R7["Rack 7\n(NVL72)"]
+    L4 --- R8["Rack 8\n(NVL72)"]
+    style C1 fill:#6a1b9a,color:#fff
+    style S1 fill:#1565c0,color:#fff
+    style S2 fill:#1565c0,color:#fff
+    style S3 fill:#1565c0,color:#fff
+    style S4 fill:#1565c0,color:#fff
+```
+
 1. **Leaf switches** — Connect directly to the compute nodes (NVL72 racks). Each rack connects to one or more leaf switches.
 2. **Spine switches** — Connect to all leaf switches in the same pod. Provide any-to-any connectivity within a pod.
 3. **Core switches** (in larger fabrics) — Connect pods to each other. Provide any-to-any connectivity across the entire fabric.

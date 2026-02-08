@@ -6,6 +6,7 @@ title: "Physical Architecture"
 import ConceptCheck from '@site/src/components/ConceptCheck';
 import Scenario from '@site/src/components/Scenario';
 import PowerDensityTimeline from '@site/src/components/PowerDensityTimeline';
+import KeyNumber, {KeyNumberRow} from '@site/src/components/KeyNumber';
 
 # Chapter 01: Physical Architecture
 
@@ -13,7 +14,15 @@ import PowerDensityTimeline from '@site/src/components/PowerDensityTimeline';
 
 ## The Power Problem
 
-Everything about modern AI infrastructure starts with power. A single NVIDIA GB200 NVL72 rack — 72 Blackwell GPUs in one liquid-cooled cabinet — draws approximately **132 kW**. For context, a typical server rack in a traditional data center draws 7-15 kW. A single AI training rack consumes roughly as much power as 10-15 traditional server racks.
+Everything about modern AI infrastructure starts with power.
+
+<KeyNumberRow>
+  <KeyNumber value="132 kW" label="Per NVL72 Rack" context="72 Blackwell GPUs, liquid-cooled" />
+  <KeyNumber value="7-15 kW" label="Traditional Rack" context="Standard server deployment" />
+  <KeyNumber value="~10x" label="Density Increase" context="One AI rack = 10+ traditional racks" />
+</KeyNumberRow>
+
+A single NVIDIA GB200 NVL72 rack — 72 Blackwell GPUs in one liquid-cooled cabinet — draws approximately **132 kW**. For context, a typical server rack in a traditional data center draws 7-15 kW. A single AI training rack consumes roughly as much power as 10-15 traditional server racks.
 
 This isn't an incremental change. It's a phase transition in data center design. Every decision downstream — cooling, physical layout, electrical infrastructure, even the building itself — flows from this power density.
 
@@ -46,6 +55,25 @@ In a DLC system:
 - **Coolant Distribution Units (CDUs)** exchange heat from the facility loop to the rack-level loop.
 - A **facility water loop** carries the heat to cooling towers or chillers outside the building.
 
+```mermaid
+flowchart LR
+    subgraph Rack["GPU Rack (132 kW)"]
+        GPU1["GPU Cold Plate"] --> RM["Return Manifold"]
+        GPU2["GPU Cold Plate"] --> RM
+        SM["Supply Manifold"] --> GPU1
+        SM --> GPU2
+    end
+    subgraph Facility["Facility Infrastructure"]
+        CDU["Coolant Distribution Unit"]
+        FWL["Facility Water Loop"]
+        CT["Cooling Tower / Chiller"]
+    end
+    RM -->|"Hot coolant"| CDU
+    CDU -->|"Cooled coolant"| SM
+    CDU <-->|"Heat exchange"| FWL
+    FWL <-->|"Heat rejection"| CT
+```
+
 The key advantage: liquid has ~3,500x the volumetric heat capacity of air. This means you can remove far more heat through a small pipe than through a large air duct.
 
 ### The Practical Reality of Liquid Cooling
@@ -72,6 +100,17 @@ Operational considerations that practitioners worry about:
 ## Power Delivery Chain
 
 Power flows through a series of transformations before reaching a GPU:
+
+```mermaid
+flowchart LR
+    A["Utility Feed\n13.8+ kV"] --> B["Substation\n480V"]
+    B --> C["UPS\nBattery Backup"]
+    C --> D["PDU\nRack Distribution"]
+    D --> E["PSU\n12V / 48V DC"]
+    E --> F["GPU"]
+    style A fill:#1565c0,color:#fff
+    style F fill:#e65100,color:#fff
+```
 
 1. **Utility feed** — High voltage (typically 13.8 kV or higher) from the grid
 2. **Substation** — Steps down to medium voltage (e.g., 480V in the US)
