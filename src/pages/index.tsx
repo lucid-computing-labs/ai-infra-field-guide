@@ -18,6 +18,9 @@ function HomepageHeader() {
           <Link className="button button--outline button--lg" to="/docs/open-questions">
             Open Questions
           </Link>
+          <Link className="button button--outline button--lg" to="/docs/lab-access">
+            Lab Access Program
+          </Link>
         </div>
       </div>
     </header>

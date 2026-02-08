@@ -1,0 +1,128 @@
+---
+sidebar_position: 8
+title: "Lab Access Program"
+slug: /lab-access
+---
+
+# Lab Access Program
+
+**Free access to a private cage in a production colocation data center — for verification researchers who want to move from theory to practice.**
+
+:::info Applications Open
+This is a 3-month pilot program. Access is free for qualified verification researchers. Scroll down for eligibility and how to apply.
+:::
+
+## The Offer
+
+Lucid Computing Labs is opening a private cage within the **Equinix SV4 colocation data center** in Sunnyvale, California to verification researchers. For a 3-month trial period, qualified researchers can:
+
+- **Install monitoring and verification systems** on real data center infrastructure to run proof-of-concept experiments
+- **Visit a production data center** — many researchers working on compute governance have never set foot inside one
+- **Test verification techniques** against real hardware, real power delivery, real cooling, and real network infrastructure
+
+There is no cost to participating researchers for the duration of the trial.
+
+## Why This Exists
+
+A recurring theme in AI governance and verification research is the gap between theory and practice. Papers propose monitoring architectures, attestation protocols, and verification schemes — but most researchers have never had the opportunity to test these ideas against real infrastructure.
+
+Reading about a data center is not the same as standing in one. The noise, the scale, the physical reality of cable management and power distribution — these things change how you think about what's practical. We believe verification research will be stronger if researchers have access to real environments.
+
+## What It Is (and What It Isn't)
+
+This is important to understand upfront:
+
+### What you get
+
+- **A private cage** in a Tier III+ colocation facility. This is a physically secured enclosure within the Equinix SV4 data center, with controlled access, power delivery, and network connectivity.
+- **Rack space and power** for installing your own equipment or verification instrumentation.
+- **Standard data center infrastructure** — power distribution (redundant utility feeds, UPS, PDUs), cooling (facility-managed), physical security (mantrap entry, biometric access, 24/7 security), and network cross-connects.
+- **Hands-on experience** with the physical environment that AI clusters actually live in: the power chain, the cooling systems, the cabling, the security model.
+
+### What you don't get
+
+**This is not an AI cluster.** There are no GPUs, no NVLink, no InfiniBand fabric, no training jobs to observe. It's critical to be clear about this distinction:
+
+| | Equinix SV4 Cage | AI Training Cluster |
+|---|---|---|
+| **Facility type** | Colocation data center | Purpose-built AI facility |
+| **Cooling** | Facility air cooling (standard colo) | Direct liquid cooling (DLC) required for modern AI racks |
+| **Power density** | 5-15 kW per rack (standard) | 40-132 kW per rack (AI workloads) |
+| **Compute hardware** | Whatever you bring | Thousands of GPUs (B200, H100, etc.) |
+| **Network** | Standard internet/cross-connect | InfiniBand fat-tree fabric |
+| **NVLink domains** | Not present | The defining feature of modern AI racks |
+| **Rack-level power** | Metered at PDU level | Metered + BMC telemetry per GPU |
+
+### What this means for your research
+
+If you're working on verification techniques, the cage is useful for:
+
+- **Facility-level verification:** Testing power monitoring, physical access audit systems, environmental sensing. The power delivery chain (utility → UPS → PDU → rack) is the same architecture as an AI facility, just at lower density.
+- **Network monitoring instrumentation:** Installing and testing SmartNICs, TAPs, or other network monitoring equipment on real infrastructure with real latency and real cabling constraints.
+- **Physical security protocols:** Developing and testing physical inspection procedures, tamper-evident seals, hardware inventory verification.
+- **Sensor deployment:** Testing environmental monitoring (temperature, humidity, vibration, acoustic) in a real data center environment with real background noise and thermal conditions.
+- **Understanding the environment:** Experiencing the physical constraints that any verification system will need to operate within — noise, access procedures, maintenance windows, shared facility coordination.
+
+It is **not** the right environment for:
+- Testing NVLink monitoring approaches (there is no NVLink)
+- Observing real training workload signatures (there are no training jobs)
+- Testing GPU telemetry integrity (there are no GPUs, unless you bring your own)
+- Measuring AI-scale power density effects (power density is 10-20x lower than an AI rack)
+
+Think of it as a realistic testbed for the **facility and physical layers** of verification — the bottom of the stack described in [Chapter 01](/docs/physical-architecture). For the compute and network layers described in [Chapters 02-04](/docs/interconnects), you would need access to an actual AI cluster.
+
+## About Equinix SV4
+
+Equinix SV4 is a production colocation facility in Sunnyvale, California, in the heart of Silicon Valley. Key specs:
+
+- **Carrier-neutral** facility with access to major cloud on-ramps and peering exchanges
+- **Tier III+** design with redundant power and cooling (2N power, N+1 cooling)
+- **Physical security:** 24/7 staffed, biometric + badge access, mantrap entry, CCTV throughout
+- **Compliance:** SOC 1, SOC 2, ISO 27001, PCI DSS
+
+This is a facility where real production workloads run. The security model, the operational procedures, and the physical environment are representative of the kind of facility that houses AI clusters — even though the specific hardware inside is different.
+
+## Who Should Apply
+
+This program is designed for:
+
+- **Verification researchers** working on compute governance, AI safety verification, or hardware-rooted trust who need a physical testbed
+- **Policy researchers** who write about data center monitoring and want firsthand experience with what these facilities actually look like
+- **Graduate students** working on theses related to AI compute verification, infrastructure monitoring, or data center security
+- **Independent researchers** with a clear research agenda related to AI infrastructure verification
+
+We're looking for people who have a specific idea of what they want to test or learn. "I want to see a data center" is fine as a secondary goal, but we want the cage to be useful, not just a tourist attraction.
+
+## How to Apply
+
+To express interest in the Lab Access Program:
+
+1. **Open a GitHub issue** on the [ai-infra-field-guide repository](https://github.com/lucid-computing-labs/ai-infra-field-guide/issues) with the title "Lab Access: [Your Name / Organization]"
+2. Describe your research focus and what you'd want to do with cage access
+3. Include your timeline and any equipment you'd plan to install
+
+We'll respond within one week. Access will be coordinated through Equinix's standard visitor and cage access procedures.
+
+## FAQ
+
+**How long is the trial?**
+3 months from the date your access is provisioned. We may extend the program based on demand and outcomes.
+
+**Is there really no cost?**
+No cost for researchers during the trial period. Lucid Computing Labs covers the cage lease, power, and cross-connect fees.
+
+**Can I install my own equipment?**
+Yes, within the constraints of the cage (available rack units, power budget, and Equinix's acceptable use policies). We'll discuss specifics during onboarding.
+
+**Can I visit without installing equipment?**
+Yes. If you're a verification or policy researcher who simply wants to experience a data center environment firsthand, we welcome guided visits. Seeing the physical reality of these facilities is valuable.
+
+**Where is it?**
+Equinix SV4, Sunnyvale, California. Close to the Caltrain corridor and major Silicon Valley campuses.
+
+**Do I need to be in the Bay Area?**
+Not necessarily, but you need to be able to travel to Sunnyvale for physical access. Remote-only participation isn't possible — the whole point is hands-on access to physical infrastructure.
+
+---
+
+*This program is part of our broader effort to make AI infrastructure knowledge more accessible. If you have questions, [open an issue](https://github.com/lucid-computing-labs/ai-infra-field-guide/issues) or reach out via the channels listed on our [GitHub page](https://github.com/lucid-computing-labs/ai-infra-field-guide).*
