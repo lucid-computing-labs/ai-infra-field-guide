@@ -70,6 +70,11 @@ const config: Config = {
           position: 'left',
         },
         {
+          to: '/docs/cluster-landscape',
+          label: 'Cluster Landscape',
+          position: 'left',
+        },
+        {
           to: '/docs/lab-access',
           label: 'Lab Access',
           position: 'left',
