@@ -295,3 +295,308 @@
   color: var(--ifm-color-emphasis-700);
   margin-bottom: 0;
 }
+
+/* Power Density Timeline */
+.power-timeline {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  background: var(--ifm-background-surface-color);
+}
+
+.power-timeline__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.power-timeline__title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.power-timeline__subtitle {
+  font-size: 0.8rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.power-timeline__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.power-timeline__row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--ifm-font-color-base);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.power-timeline__row:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.power-timeline__row--active {
+  border-color: var(--ifm-color-primary);
+  background: var(--ifm-color-emphasis-100);
+}
+
+.power-timeline__row-label {
+  min-width: 80px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.power-timeline__row-year {
+  font-size: 0.75rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.power-timeline__bar-track {
+  flex: 1;
+  height: 24px;
+  background: var(--ifm-color-emphasis-200);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.power-timeline__bar-fill {
+  height: 100%;
+  background: var(--ifm-color-primary);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.power-timeline__bar-value {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ifm-font-color-base);
+}
+
+.power-timeline__detail {
+  padding: 1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+  background: var(--ifm-color-emphasis-100);
+}
+
+.power-timeline__detail-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.power-timeline__notes {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--ifm-color-emphasis-700);
+  margin: 0.75rem 0 0;
+}
+
+.power-timeline__callout {
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--ifm-background-surface-color);
+  border-left: 3px solid var(--ifm-color-primary);
+  border-radius: 0 4px 4px 0;
+  line-height: 1.6;
+}
+
+/* Network Visibility Map */
+.visibility-map {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  background: var(--ifm-background-surface-color);
+}
+
+.visibility-map__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.visibility-map__controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.visibility-map__diagram {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.visibility-map__detail {
+  padding: 1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+}
+
+.visibility-map__columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .visibility-map__columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.visibility-map__col ul {
+  padding-left: 1.25rem;
+  margin: 0;
+}
+
+.visibility-map__col li {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 0.35rem;
+}
+
+.visibility-map__col-header {
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.visibility-map__col--sees .visibility-map__col-header {
+  color: #2e7d32;
+}
+
+.visibility-map__col--blind .visibility-map__col-header {
+  color: #c62828;
+}
+
+/* FLOP Calculator */
+.flop-calc {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  background: var(--ifm-background-surface-color);
+}
+
+.flop-calc__inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.flop-calc__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.flop-calc__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.flop-calc__input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.flop-calc__input {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  width: 100%;
+  max-width: 140px;
+}
+
+.flop-calc__unit {
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.flop-calc__select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+}
+
+.flop-calc__select--full {
+  width: 100%;
+}
+
+.flop-calc__range {
+  width: 100%;
+  cursor: pointer;
+}
+
+.flop-calc__range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--ifm-color-emphasis-500);
+}
+
+.flop-calc__results {
+  padding: 1rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+  background: var(--ifm-color-emphasis-100);
+}
+
+.flop-calc__warning {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(198, 40, 40, 0.08);
+  border: 1px solid #c62828;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #c62828;
+}
+
+[data-theme='dark'] .flop-calc__warning {
+  color: #ef9a9a;
+  border-color: #ef9a9a;
+}
