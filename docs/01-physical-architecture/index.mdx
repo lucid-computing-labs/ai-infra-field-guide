@@ -5,14 +5,11 @@ title: "Physical Architecture"
 
 import ConceptCheck from '@site/src/components/ConceptCheck';
 import Scenario from '@site/src/components/Scenario';
+import PowerDensityTimeline from '@site/src/components/PowerDensityTimeline';
 
 # Chapter 01: Physical Architecture
 
 > *Racks, cooling, power delivery, and why modern AI clusters look nothing like the data centers you've seen in stock photos.*
-
-:::info Status
-This chapter is under active development. The structure and key concepts are in place; detailed prose, verified numbers, and firsthand practitioner details are being added. [Contributions welcome.](https://github.com/lucid-computing-labs/ai-infra-field-guide/blob/main/CONTRIBUTING.md)
-:::
 
 ## The Power Problem
 
@@ -22,14 +19,11 @@ This isn't an incremental change. It's a phase transition in data center design.
 
 ### The Generation Gap
 
-| Generation | GPU | Rack Power (typical) | Cooling | Year |
-|-----------|-----|---------------------|---------|------|
-| Ampere | A100 | ~6-10 kW per node | Air-cooled | 2020 |
-| Hopper | H100 | ~10-15 kW per node | Air or liquid | 2022 |
-| Blackwell | B200/GB200 | ~40-132 kW per rack | Liquid required | 2024 |
-| Rubin (projected) | R100 | Higher | Liquid required | 2026+ |
+Use the interactive timeline below to compare GPU generations and see how power density, compute, and cooling requirements have evolved:
 
-The jump from Hopper to Blackwell is where air cooling became physically impossible at rack scale. You cannot move enough air through a cabinet to dissipate 132 kW — the physics don't work. This forced the entire industry onto liquid cooling in a single generation.
+<PowerDensityTimeline />
+
+The numbers tell the story: from A100 to GB200, rack-level power draw increased by ~20x while per-GPU compute increased by ~7x. Power is growing faster than compute. This is the fundamental reason why efficiency — measured as useful FLOPS per watt — is becoming the defining constraint in AI infrastructure, not raw FLOPS.
 
 <ConceptCheck
   question="A facility operator is planning to retrofit an existing air-cooled data center to support GB200 NVL72 racks. Beyond the cooling system itself, what is the most likely bottleneck they'll hit first?"
@@ -53,6 +47,16 @@ In a DLC system:
 - A **facility water loop** carries the heat to cooling towers or chillers outside the building.
 
 The key advantage: liquid has ~3,500x the volumetric heat capacity of air. This means you can remove far more heat through a small pipe than through a large air duct.
+
+### The Practical Reality of Liquid Cooling
+
+What the vendor datasheets don't emphasize: liquid cooling introduces an entirely new category of operational risk. Air-cooled data centers don't have pipe joints that can leak. DLC systems do — and a coolant leak in a rack containing millions of dollars of GPUs is a serious incident.
+
+Operational considerations that practitioners worry about:
+- **Leak detection:** DLC racks include leak sensors at every potential failure point. A single leak can trigger automatic shutdown of the affected rack.
+- **Coolant quality:** The glycol/water mix degrades over time. Contamination (particles, biological growth) can reduce heat transfer and clog cold plates. Facilities need regular coolant testing and filtration.
+- **Pressure management:** The coolant loop must maintain precise pressure to prevent air bubbles (which create hot spots) and leaks. Pressure spikes during startup or CDU failover are a real concern.
+- **Maintenance access:** Traditional server maintenance means pulling a node from a rack. With DLC, you also need to manage quick-disconnect fittings on coolant lines. This is slower and requires trained personnel.
 
 <ConceptCheck
   question="Why did NVIDIA move to liquid cooling for the GB200 NVL72 rather than simply using more powerful fans?"
@@ -81,6 +85,12 @@ Each transformation loses some energy as heat. Total facility efficiency is meas
 
 A PUE of 1.0 would mean zero overhead — every watt goes to compute. State-of-the-art AI facilities target PUE of 1.1-1.2, meaning 10-20% of total power goes to cooling, lighting, and other facility overhead.
 
+### Why PUE Matters for Verification
+
+PUE isn't just an efficiency metric — it's a verification tool. If you know a facility's total power draw (which can be measured at the utility meter) and its PUE (which can be estimated from the cooling architecture), you can calculate how much power is actually reaching compute equipment. This provides an independent check on claims about how many GPUs are running.
+
+For example: a facility claiming to run 10,000 GB200 GPUs would need approximately 14-15 MW of IT power (at ~1,200W per GPU plus networking and storage overhead). At PUE 1.15, that's roughly 16-17 MW total. A utility meter showing only 8 MW would contradict this claim.
+
 <ConceptCheck
   question="A 100 MW AI data center has a PUE of 1.15. How much power actually reaches the IT equipment?"
   options={[
@@ -92,14 +102,58 @@ A PUE of 1.0 would mean zero overhead — every watt goes to compute. State-of-t
   explanation={<span>PUE = Total / IT, so IT = Total / PUE = 100 / 1.15 &asymp; 87 MW. The remaining ~13 MW goes to cooling infrastructure, power conversion losses, lighting, and other facility systems. This is why PUE matters enormously at scale — that 15% overhead at 100 MW means 15 MW of power (and the associated cost and infrastructure) that doesn't contribute to computation.</span>}
 />
 
+## Physical Layout and Density
+
+The physical layout of an AI data center is driven by three constraints that interact in non-obvious ways:
+
+### Weight Loading
+
+An NVL72 rack weighs approximately **1,400 kg** (3,000+ lbs). Traditional raised-floor data centers were designed for loads of ~500-750 kg per rack. Many existing facilities cannot physically support the weight of a fully loaded AI rack without structural reinforcement. New builds use slab floors with reinforced concrete.
+
+### Cable Management
+
+Each NVL72 rack has:
+- **Coolant lines** — Supply and return connections to the CDU, typically 1-2 inch diameter
+- **Power feeds** — Multiple high-amperage circuits, typically 3-phase
+- **InfiniBand cables** — Multiple fiber connections per rack for the IB fabric
+- **Management network** — Ethernet for BMC, management, and out-of-band access
+
+This is significantly more infrastructure per rack than a traditional server deployment. The cable density drives aisle width, overhead tray design, and hot/cold containment strategy.
+
+### Acoustic Environment
+
+Even with liquid cooling handling the GPU heat load, AI facilities are loud. Power supplies, residual fans, and cooling infrastructure generate sustained noise levels of 85-95 dB in the server halls — well above OSHA's threshold for hearing protection. Maintenance crews wear hearing protection. This matters because it limits the time humans can spend in the space for physical inspection and maintenance.
+
+<ConceptCheck
+  question="An NVL72 rack weighs approximately 1,400 kg. A data center floor was designed for 750 kg per tile (600mm x 600mm tiles). Can you place NVL72 racks on this floor?"
+  options={[
+    {label: "(a) Yes — the rack footprint spans multiple tiles, distributing the load"},
+    {label: "(b) Maybe — it depends on the rack footprint and how the weight is distributed across the support structure", correct: true},
+    {label: "(c) No — the per-tile rating is the hard limit regardless of rack size"},
+    {label: "(d) Yes — modern racks have built-in load distribution systems"},
+  ]}
+  explanation="The answer depends on the structural details. A rack typically sits on 4 mounting points spanning multiple floor tiles. The load is distributed across the floor stringers and pedestals, not concentrated on a single tile. However, the concentrated point loads at the rack feet may still exceed structural ratings. Most facilities planning for AI racks do structural engineering analysis and either reinforce the floor or use slab-on-grade construction. This is a real constraint that has delayed many retrofit projects."
+/>
+
 ## Facility Design Implications
 
 The physical constraints cascade upward into every aspect of facility planning:
 
 - **Site selection** is driven primarily by power availability and cost. You need reliable access to hundreds of megawatts, ideally with renewable energy commitments.
-- **Water availability** matters for cooling towers (evaporative cooling is the most efficient way to reject heat to the environment).
+- **Water availability** matters for cooling towers (evaporative cooling is the most efficient way to reject heat to the environment). A 100 MW facility can consume millions of gallons of water per day depending on climate and cooling tower design.
 - **Physical security** is critical — a single AI training cluster can represent billions of dollars of capital equipment in a relatively compact space.
 - **Redundancy** (N+1 or 2N power and cooling) is expected for production training runs that may take months. An unplanned outage during a multi-month training run can waste weeks of compute.
+
+### The Geography of AI Compute
+
+The power and cooling requirements create strong geographic preferences for AI data centers:
+
+- **Northern climates** are preferred for free cooling — cold outside air reduces or eliminates the need for mechanical chillers during winter months.
+- **Hydroelectric regions** (Pacific Northwest, Nordics, Quebec) offer cheap, reliable, low-carbon power.
+- **Natural gas pipeline proximity** matters for facilities that use on-site power generation for reliability.
+- **Grid interconnection capacity** is often the binding constraint — even if a region has cheap power, the local grid may not have enough spare capacity to deliver hundreds of megawatts to a single site.
+
+This is why AI data center construction is concentrated in specific regions: northern Virginia (existing grid infrastructure), Iowa/Nebraska (cheap wind power), the Nordics (hydro + cold climate), and increasingly the Middle East (cheap energy, new builds).
 
 <Scenario
   title="Capacity planning for a new AI facility"
