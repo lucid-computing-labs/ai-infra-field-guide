@@ -70,6 +70,11 @@ const config: Config = {
           position: 'left',
         },
         {
+          to: '/docs/lab-access',
+          label: 'Lab Access',
+          position: 'left',
+        },
+        {
           href: 'https://github.com/lucid-computing-labs/ai-infra-field-guide',
           label: 'GitHub',
           position: 'right',
@@ -93,6 +98,10 @@ const config: Config = {
             {
               label: 'Open Questions',
               to: '/docs/open-questions',
+            },
+            {
+              label: 'Lab Access',
+              to: '/docs/lab-access',
             },
           ],
         },

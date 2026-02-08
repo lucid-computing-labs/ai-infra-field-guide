@@ -29,6 +29,7 @@ const sidebars: SidebarsConfig = {
     },
     'glossary',
     'open-questions',
+    'lab-access',
   ],
 };
 
