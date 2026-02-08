@@ -2,7 +2,7 @@
 
 **A practitioner's guide to modern AI cluster architecture — for verification researchers, governance professionals, and the technically curious.**
 
-[Read the Field Guide](https://lucid-labs.github.io/ai-infra-field-guide/) | [Open Questions](https://lucid-labs.github.io/ai-infra-field-guide/docs/open-questions) | [Contribute](./CONTRIBUTING.md)
+[Read the Field Guide](https://lucid-computing-labs.github.io/ai-infra-field-guide/) | [Open Questions](https://lucid-computing-labs.github.io/ai-infra-field-guide/docs/open-questions) | [Contribute](./CONTRIBUTING.md)
 
 ---
 
@@ -20,13 +20,13 @@ This is **not** a collection of slides with bullet points. It's designed for act
 
 | Chapter | Topic | Status |
 |---------|-------|--------|
-| [Introduction](https://lucid-labs.github.io/ai-infra-field-guide/docs/intro) | How to use this guide, philosophy, audience | Draft |
-| [01 — Physical Architecture](https://lucid-labs.github.io/ai-infra-field-guide/docs/physical-architecture) | Racks, cooling, power delivery | Draft |
-| [02 — Interconnects](https://lucid-labs.github.io/ai-infra-field-guide/docs/interconnects) | NVLink, InfiniBand, topology, verification boundaries | Draft |
-| [03 — Cluster Management](https://lucid-labs.github.io/ai-infra-field-guide/docs/cluster-management) | Schedulers, health monitoring, failure recovery | Draft |
-| [04 — Verification Relevance](https://lucid-labs.github.io/ai-infra-field-guide/docs/verification) | Observability, attestation surfaces, governance implications | Draft |
-| [Glossary](https://lucid-labs.github.io/ai-infra-field-guide/docs/glossary) | Key terms | Draft |
-| [Open Questions](https://lucid-labs.github.io/ai-infra-field-guide/docs/open-questions) | Unsolved problems where we need help | Draft |
+| [Introduction](https://lucid-computing-labs.github.io/ai-infra-field-guide/docs/intro) | How to use this guide, philosophy, audience | Draft |
+| [01 — Physical Architecture](https://lucid-computing-labs.github.io/ai-infra-field-guide/docs/physical-architecture) | Racks, cooling, power delivery | Draft |
+| [02 — Interconnects](https://lucid-computing-labs.github.io/ai-infra-field-guide/docs/interconnects) | NVLink, InfiniBand, topology, verification boundaries | Draft |
+| [03 — Cluster Management](https://lucid-computing-labs.github.io/ai-infra-field-guide/docs/cluster-management) | Schedulers, health monitoring, failure recovery | Draft |
+| [04 — Verification Relevance](https://lucid-computing-labs.github.io/ai-infra-field-guide/docs/verification) | Observability, attestation surfaces, governance implications | Draft |
+| [Glossary](https://lucid-computing-labs.github.io/ai-infra-field-guide/docs/glossary) | Key terms | Draft |
+| [Open Questions](https://lucid-computing-labs.github.io/ai-infra-field-guide/docs/open-questions) | Unsolved problems where we need help | Draft |
 
 ## Interactive Components
 
@@ -41,7 +41,7 @@ The guide includes React-based interactive components embedded in the content:
 
 ```bash
 # Clone the repo
-git clone https://github.com/lucid-labs/ai-infra-field-guide.git
+git clone https://github.com/lucid-computing-labs/ai-infra-field-guide.git
 cd ai-infra-field-guide
 
 # Install dependencies
@@ -79,4 +79,4 @@ This project is open source. See [LICENSE](./LICENSE) for details.
 
 ## About
 
-Built by [Lucid Computing Labs](https://github.com/lucid-labs).
+Built by [Lucid Computing Labs](https://github.com/lucid-computing-labs).

@@ -11,10 +11,10 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://lucid-labs.github.io',
+  url: 'https://lucid-computing-labs.github.io',
   baseUrl: '/ai-infra-field-guide/',
 
-  organizationName: 'lucid-labs',
+  organizationName: 'lucid-computing-labs',
   projectName: 'ai-infra-field-guide',
 
   onBrokenLinks: 'throw',
@@ -37,7 +37,7 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           editUrl:
-            'https://github.com/lucid-labs/ai-infra-field-guide/edit/main/',
+            'https://github.com/lucid-computing-labs/ai-infra-field-guide/edit/main/',
           remarkPlugins: [],
           rehypePlugins: [],
         },
@@ -70,7 +70,7 @@ const config: Config = {
           position: 'left',
         },
         {
-          href: 'https://github.com/lucid-labs/ai-infra-field-guide',
+          href: 'https://github.com/lucid-computing-labs/ai-infra-field-guide',
           label: 'GitHub',
           position: 'right',
         },
@@ -101,11 +101,11 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/lucid-labs/ai-infra-field-guide',
+              href: 'https://github.com/lucid-computing-labs/ai-infra-field-guide',
             },
             {
               label: 'Contribute',
-              href: 'https://github.com/lucid-labs/ai-infra-field-guide/blob/main/CONTRIBUTING.md',
+              href: 'https://github.com/lucid-computing-labs/ai-infra-field-guide/blob/main/CONTRIBUTING.md',
             },
           ],
         },

@@ -72,7 +72,7 @@ We use React components embedded in MDX pages. If you want to build or improve a
 ## Development Setup
 
 ```bash
-git clone https://github.com/lucid-labs/ai-infra-field-guide.git
+git clone https://github.com/lucid-computing-labs/ai-infra-field-guide.git
 cd ai-infra-field-guide
 npm install
 npm start
