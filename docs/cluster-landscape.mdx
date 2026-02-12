@@ -1,0 +1,275 @@
+---
+sidebar_position: 6
+title: "The Cluster Landscape"
+slug: /cluster-landscape
+---
+
+import ClusterTable from '@site/src/components/ClusterTable';
+import KeyNumber, {KeyNumberRow} from '@site/src/components/KeyNumber';
+
+# The Cluster Landscape
+
+> *The largest AI compute installations in the world — what's operational, what's under construction, and what the numbers actually mean.*
+
+This page catalogs the largest known AI compute clusters based on publicly available information. It's intended as a reference for verification researchers, policy analysts, and anyone who needs to reason concretely about the scale of AI infrastructure that exists today.
+
+:::caution Important caveats
+GPU counts and power figures come from company announcements, press reports, and industry databases. Companies have incentives to overstate their deployments. "Planned" figures are aspirational and subject to change. Where possible, we note the source and confidence level. The Epoch AI GPU Clusters database[^epoch-dataset] is the most comprehensive open tracker and estimates it covers only 10-20% of global cluster capacity.[^epoch-coverage]
+:::
+
+## Quick Reference
+
+Search, filter, and explore the world's largest AI compute clusters. Click any card for full details.
+
+<ClusterTable />
+
+<KeyNumberRow>
+  <KeyNumber value="74.5%" label="US Share" context="Of global GPU cluster performance" />
+  <KeyNumber value="~80%" label="Private Sector" context="Share of global AI compute" />
+  <KeyNumber value="10-20%" label="Dataset Coverage" context="Epoch AI's estimated coverage" />
+</KeyNumberRow>
+
+---
+
+## Detailed Profiles
+
+### Operational Clusters
+
+These clusters are confirmed to be running production workloads as of early 2026.
+
+| Cluster | Operator | Location | GPU/Accelerator Count | Hardware | Power | Networking | Status |
+|---------|----------|----------|----------------------|----------|-------|------------|--------|
+| **Colossus** | xAI | Memphis, TN | ~555,000 GPUs | H200 + GB200/GB300 | ~2 GW (target) | NVIDIA Spectrum-X Ethernet | Operational (Jan 2026) |
+| **Project Rainier** | AWS (for Anthropic) | New Carlisle, IN | ~500,000 chips | Trainium2 | 2.2 GW (site capacity) | Custom AWS fabric | Operational (Oct 2025) |
+| **Meta Cluster Fleet** | Meta | Multiple US sites | ~1.3M GPUs (fleet-wide) | H100, H200 (fleet) | >1 GW (aggregate) | InfiniBand + RoCE | Operational (distributed) |
+| **Stargate Phase 1** | OpenAI / Oracle | Abilene, TX | Not disclosed | GB200 | 200 MW+ (Phase 1) | Oracle Acceleron RoCE | Operational (Sep 2025) |
+| **El Capitan** | LLNL (DOE) | Livermore, CA | 44,544 APUs | AMD MI300A | 30 MW | HPE Slingshot-11 | Operational (Jan 2025) |
+
+### xAI Colossus
+
+Colossus is the single largest known single-site AI cluster. Phase 1 (100,000 H100 GPUs) was built in 122 days in mid-2024 — an unprecedented construction timeline that cut the standard industry deployment time by nearly 80%.[^colossus-122] Phase 2 doubled it to 200,000 by early 2025.[^colossus-phase2] As of January 15, 2026, the cluster expanded to 555,000 GPUs at a reported cost of $18 billion, consolidating its position as the world's largest concentration of AI compute.[^colossus-555k]
+
+The facility supplements grid power with 168+ Tesla Megapacks for power buffering, with an on-site gas-fired power plant under construction to reach its 2 GW total capacity target.[^colossus-power] Colossus 1 now houses over 230,000 GPUs, including over 30,000 GB200 Blackwell chips.[^colossus-hw]
+
+Notably, Colossus uses NVIDIA's Spectrum-X Ethernet platform with BlueField-3 DPUs rather than InfiniBand, with each server node equipped with 400 GbE NICs providing 3.6 Tbps bandwidth per server.[^colossus-networking] This is a significant architectural choice — it trades InfiniBand's mature ecosystem for Ethernet's scale and cost advantages, and has implications for what network monitoring tools can be deployed.
+
+In January 2026, Elon Musk announced xAI had purchased a third building near Southaven, Mississippi (named "MACROHARDRR"), representing a $20 billion commitment to Mississippi — the largest private-sector investment in the state's history — with a roadmap toward 1 million GPUs by late 2026.[^colossus-expansion]
+
+### AWS Project Rainier
+
+Project Rainier is the world's largest non-NVIDIA AI cluster.[^rainier-largest] Built by AWS for Anthropic, it uses Amazon's custom Trainium2 accelerators. AWS activated the cluster in October 2025, less than one year after it was first announced, with Anthropic already running workloads to train Claude.[^rainier-activation]
+
+Each Trainium2 UltraServer combines four physical servers with 16 Trainium2 chips each, delivering 20.8 peak petaflops per instance.[^rainier-ultraserver] The site near New Carlisle, Indiana spans 1,200 acres and will ultimately draw 2.2 GW of power. Construction began in September 2024, and within seven months, seven of 30 planned buildings were operational.[^rainier-construction]
+
+Anthropic engineers work directly with Annapurna Labs (Amazon's chip division) on low-level kernel development and contribute to the AWS Neuron software stack.[^rainier-anthropic] AWS expects to scale to over 1 million Trainium2 chips,[^rainier-million] with next-generation Trainium3 chips (2.52 PFLOPS/chip on TSMC 3nm) already launched.[^trainium3]
+
+This cluster is significant for verification because it demonstrates that the AI compute landscape is not NVIDIA-only — verification systems must account for diverse accelerator architectures with different telemetry interfaces.
+
+### Meta Cluster Fleet
+
+Meta's cluster fleet is harder to characterize as a single entity. Meta operates multiple clusters across multiple data centers. By end of 2025, Meta reported approximately 1.3 million GPUs fleet-wide, providing over 2 exaflops of mixed-precision compute.[^meta-fleet] However, these are distributed across facilities, not concentrated in a single cluster.
+
+Individual clusters include the well-documented 24,576-GPU H100 systems (two clusters announced in early 2024)[^meta-24k] and larger subsequent deployments. Meta has described its infrastructure scaling approach as building across several traditional data center buildings plus "weatherproof tents" and adjacent colocation facilities, with tent-based deployments operational in just 4-7 months compared to traditional 14-20 month timelines.[^meta-tents]
+
+Meta is notable for publishing detailed infrastructure blog posts through [Engineering at Meta](https://engineering.fb.com/),[^meta-engineering] making it one of the better-documented large-scale operators. Meta's 2026 capital expenditure is estimated at $115-135 billion.[^meta-capex]
+
+### Stargate Phase 1
+
+Stargate Phase 1 in Abilene, Texas is the first operational piece of what was announced as "the largest AI infrastructure project in history" at a White House press conference on January 21, 2025, with President Trump alongside Sam Altman (OpenAI), Larry Ellison (Oracle), and Masayoshi Son (SoftBank).[^stargate-announce]
+
+Construction began in June 2024. Oracle began delivering NVIDIA GB200 racks in June 2025, and the first two buildings were energized by September 2025.[^stargate-phase1] The full Abilene campus will eventually house more than 450,000 GB200 GPUs drawing 1.2 GW, according to Larry Ellison.[^stargate-450k]
+
+The broader Stargate program has expanded to five additional US sites (Shackelford County, TX; Doña Ana County, NM; Lordstown, OH; Milam County, TX; and Wisconsin), bringing total planned capacity to nearly 7 GW and over $400 billion in investment.[^stargate-sites] SoftBank and OpenAI each committed $19 billion of initial capital, with Oracle and MGX contributing $7 billion each.[^stargate-funding]
+
+The infrastructure uses Oracle's Acceleron RoCE networking rather than InfiniBand — another data point in the industry's shift from InfiniBand toward Ethernet-based fabrics at scale.
+
+### El Capitan
+
+El Capitan represents the public sector's current peak. It displaced Frontier as the world's fastest supercomputer on the November 2024 TOP500 list and was officially dedicated on January 9, 2025.[^elcapitan-top500]
+
+The system contains 11,136 nodes with 44,544 AMD Instinct MI300A APUs — each combining 24 Zen4 CPU cores and a CDNA3 GPU on a single package with 128 GB of HBM3 memory.[^elcapitan-hw] It achieves 1.81 exaFLOPS on the HPL benchmark (2.88 exaFLOPS peak), occupies 7,500 square feet across 87 compute racks, and draws approximately 30 MW.[^elcapitan-specs] The system uses a 100% fanless, direct liquid cooling system and HPE Slingshot-11 interconnect.[^elcapitan-cooling]
+
+But the striking fact is this: El Capitan's total compute capacity is less than a quarter of xAI's Colossus.[^epoch-comparison] This gap between public-sector and private-sector AI compute is one of the defining trends in the field and has significant implications for government verification capabilities. El Capitan is also notable for using AMD rather than NVIDIA hardware, built by HPE in partnership with Lawrence Livermore National Laboratory for the US Department of Energy's nuclear stockpile stewardship program.[^elcapitan-mission]
+
+### Planned and Under Construction
+
+These deployments have been announced and have construction underway or completed, with target dates in 2026-2027.
+
+| Cluster | Operator | Location | Planned GPU Count | Hardware | Target Power | Target Date | Confidence |
+|---------|----------|----------|-------------------|----------|-------------|-------------|------------|
+| **Colossus Expansion** | xAI | Memphis + Southaven, MS | 1,000,000 GPUs | GB200/GB300 | 2 GW+ | Late 2026 | Medium |
+| **Meta Prometheus** | Meta | New Albany, OH | 300,000-500,000 GPUs | GB200/GB300 | 1+ GW | H2 2026 | Medium |
+| **Stargate Expansion** | OpenAI / Oracle / SoftBank | 6 US sites | 450,000+ GPUs (Abilene alone) | GB200/GB300 | ~7 GW (all sites) | 2026-2027 | High |
+| **OCI Zettascale10** | Oracle | Multiple sites | Up to 800,000 GPUs | GB200 / MI450 | Multi-GW | H2 2026 | Medium |
+| **HUMAIN Flagship** | HUMAIN (Saudi PIF) | Saudi Arabia + US | Up to 600,000 GPUs | GB300 + MI450 | 500 MW+ (Phase 1) | 2026-2027 | Medium |
+| **AWS Trainium3 Clusters** | AWS | Multiple sites | Not disclosed | Trainium3 | Multi-GW | 2026-2027 | High |
+
+**Meta Prometheus** is a 1+ GW cluster spanning multiple data center buildings in New Albany, Ohio — Meta calls it the first of its "titan clusters" designed to power the company's push toward what it describes as "superintelligence."[^prometheus-titan] SemiAnalysis estimates the Prometheus cluster at 500,000 GPUs drawing 1,020 MW, with two 200 MW on-site natural gas plants for power generation.[^prometheus-semi] Meta has earmarked "hundreds of billions" for a fleet of multi-gigawatt data center campuses, including a Louisiana-based "Hyperion" cluster targeting 5 GW by 2030.[^meta-billions] The company has secured 6.6 GW of nuclear power deals by 2035 through partnerships with Vistra Corp., Oklo Inc., and TerraPower.[^meta-nuclear]
+
+**HUMAIN** is Saudi Arabia's national AI company, backed by the Public Investment Fund. HUMAIN has announced plans to deploy up to 600,000 NVIDIA GPUs (including GB300 platforms) in Saudi Arabia and the US.[^humain-nvidia] Partnerships include a joint venture with AMD and Cisco for MI450-based infrastructure (100 MW Phase 1 in 2026, targeting 1 GW by 2030),[^humain-amd] a collaboration with xAI on a 500 MW+ flagship facility in Saudi Arabia,[^humain-xai] and an AWS partnership to deploy 150,000 NVIDIA GPUs in a Riyadh "AI Zone."[^humain-aws] HUMAIN's stated ambition is to become "the third-largest AI provider in the world, behind the United States and China."[^humain-ambition]
+
+**Oracle's OCI Zettascale10** supercluster claims up to 2.4 zettaFLOPS of AI compute with Blackwell GPUs scaling to 131,072 GPUs per cluster.[^oracle-zetta] Oracle is also partnering with AMD on MI450 deployments.
+
+## What the Numbers Mean
+
+### The GPU Count Problem
+
+GPU counts are the most commonly cited metric for cluster size, but they're misleading without context:
+
+- **Generation matters enormously.** A single GB200 GPU delivers roughly 7x the FP8 compute of an H100. A "100,000 H100" cluster and a "100,000 GB200" cluster are not comparable — the latter has ~7x more compute.
+- **Fleet vs. cluster.** Meta's "1.3 million GPUs" is a fleet total spread across many sites and clusters.[^meta-fleet] xAI's "555,000 GPUs" is largely concentrated at a single site.[^colossus-555k] The operational characteristics — and the verification challenges — are very different.
+- **Accelerator diversity.** Not all accelerators are GPUs. AWS Trainium2, Google TPUs, AMD MI300A APUs, and Intel Gaudi all have different architectures, memory systems, and interconnects. Comparing them by count alone is like comparing apples to a mix of apples, oranges, and pears.
+
+A more meaningful comparison would use **aggregate peak FLOPS** (at a specified precision) or **aggregate HBM bandwidth**, but companies don't always publish these figures consistently.
+
+### The Power Tell
+
+Power consumption is in many ways a more reliable indicator of actual compute capacity than GPU counts:
+
+| Metric | What It Tells You | Why It's Hard to Fake |
+|--------|-------------------|----------------------|
+| Utility power draw | Total facility load, including cooling overhead | Measured by the utility company, not the operator |
+| IT power (total - cooling) | Compute equipment load | Requires knowing PUE, but constrains the range of possible GPU counts |
+| Per-GPU TDP × GPU count | Expected IT power for claimed configuration | Must match utility data within PUE margins |
+
+If an operator claims to run 500,000 GB200 GPUs at training load, the math is straightforward: ~1,200W per GPU × 500,000 = 600 MW of IT power. At PUE 1.15, that's ~690 MW total. You can verify this against the utility feed — and at these power levels, the draw is visible on the regional power grid.
+
+This is why power is considered the strongest single verification signal for AI compute capacity. You can lie about GPU counts. You can't easily lie about 690 MW of power draw.
+
+### The Networking Shift
+
+A notable trend in the table above: several of the largest new clusters use **Ethernet-based fabrics** (NVIDIA Spectrum-X, Oracle Acceleron RoCE) rather than InfiniBand, which had been the dominant interconnect for AI training. xAI's Colossus uses Spectrum-X with BlueField-3 DPUs,[^colossus-networking] and Oracle's Stargate infrastructure uses its own Acceleron RoCE fabric.[^stargate-phase1]
+
+This matters for verification because:
+- Ethernet-based fabrics use different management and monitoring tools than InfiniBand
+- SmartNIC capabilities differ between InfiniBand ConnectX and Ethernet BlueField/Spectrum NICs
+- Traffic monitoring techniques developed for InfiniBand may need adaptation for RoCE environments
+- The shift expands the set of vendors and protocols that verification systems must support
+
+### The Geographic Concentration
+
+Looking at where these clusters are located reveals a stark geographic concentration:
+
+- **United States:** xAI (Memphis), AWS (Indiana), Meta (multiple), OpenAI/Oracle (Abilene + 5 sites), LLNL (Livermore)
+- **Middle East:** HUMAIN/Saudi Arabia (Riyadh, Dammam — planned)
+- **Europe:** Stargate Norway (Narvik — planned)
+
+As of May 2025, the US contains approximately 74.5% of global GPU cluster performance, with China at 14.1% and the EU at 4.8%, according to the Epoch AI dataset.[^epoch-geography] However, the dataset's 10-20% coverage means actual shares could differ by 5+ percentage points,[^epoch-coverage] and China has largely withdrawn from public rankings since 2017 while China's Ministry of Industry and Information Technology reported ~230 exaflops of aggregate national computing power by July 2024.[^china-compute]
+
+This concentration has direct implications for compute governance: any international verification framework must account for the fact that the vast majority of frontier AI compute is located in a single country, operated by a handful of private companies.
+
+### The Public-Private Gap
+
+Perhaps the most striking feature of the landscape is the gap between public-sector and private-sector compute:
+
+- **Largest public-sector system** (El Capitan): 44,544 AMD MI300A APUs, ~30 MW, 1.8 exaFLOPS[^elcapitan-specs]
+- **Largest private-sector system** (xAI Colossus): 555,000 NVIDIA GPUs, ~2 GW target[^colossus-555k]
+
+The private sector's share of global AI compute has grown from roughly 40% in 2019 to approximately 80% in 2025.[^epoch-private] This means that governments proposing compute governance frameworks must negotiate with — or regulate — private operators whose infrastructure dwarfs any government-owned system.
+
+For verification researchers, this asymmetry creates a challenge: the entities being verified have more AI compute expertise and infrastructure than the entities doing the verification.
+
+## How This Connects to the Field Guide
+
+The cluster landscape makes the concepts from the field guide concrete:
+
+- **[Physical Architecture](/docs/physical-architecture):** xAI's Colossus uses liquid cooling from Supermicro with Tesla Megapack power buffering.[^colossus-power] AWS Project Rainier spans 1,200 acres.[^rainier-construction] These are the physical realities behind the kW-per-rack numbers.
+- **[Interconnects](/docs/interconnects):** The shift from InfiniBand to Ethernet at the largest clusters (xAI, Oracle/OpenAI) changes the monitoring landscape. NVLink opacity (the blind spot within racks) applies to every NVIDIA-based cluster in the table.
+- **[Cluster Management](/docs/cluster-management):** At xAI's scale, the MTBF math means they're handling hardware failures every few minutes. Meta's tent-based deployment strategy[^meta-tents] shows how operators are trading construction permanence for deployment speed.
+- **[Verification Relevance](/docs/verification):** Power draw at 2 GW is visible on regional power grids. But NVLink domains within each rack remain invisible to network monitoring. The verification challenge scales with the cluster.
+
+---
+
+## Sources
+
+[^epoch-dataset]: Epoch AI. "Data on GPU Clusters." [epoch.ai/data/gpu-clusters](https://epoch.ai/data/gpu-clusters). Accessed February 2026.
+
+[^epoch-coverage]: Epoch AI. "Trends in AI Supercomputers." [epoch.ai/blog/trends-in-ai-supercomputers](https://epoch.ai/blog/trends-in-ai-supercomputers). "As of March 2025, the dataset covers about 10–20% of total AI computing capacity."
+
+[^colossus-122]: ServeTheHome. "Inside the 100K GPU xAI Colossus Cluster that Supermicro Helped Build for Elon Musk." [servethehome.com](https://www.servethehome.com/inside-100000-nvidia-gpu-xai-colossus-cluster-supermicro-helped-build-for-elon-musk/).
+
+[^colossus-phase2]: Tom's Hardware. "Elon Musk is doubling the world's largest AI GPU cluster — expanding Colossus to 200,000." [tomshardware.com](https://www.tomshardware.com/pc-components/gpus/elon-musk-is-doubling-the-worlds-largest-ai-gpu-cluster-expanding-colossus-gpu-cluster-to-200-000-soon-has-floated-300-000-in-the-past).
+
+[^colossus-555k]: Introl. "xAI Colossus Hits 2 GW: 555,000 GPUs, $18B, Largest AI Site." [introl.com](https://introl.com/blog/xai-colossus-2-gigawatt-expansion-555k-gpus-january-2026). January 2026.
+
+[^colossus-power]: SemiAnalysis. "xAI's Colossus 2 — First Gigawatt Datacenter In The World." [newsletter.semianalysis.com](https://newsletter.semianalysis.com/p/xais-colossus-2-first-gigawatt-datacenter).
+
+[^colossus-hw]: FinancialContent / TokenRing. "Colossus Rising: How xAI's Memphis Supercomputer Redefined the Global Compute Race." [financialcontent.com](https://markets.financialcontent.com/stocks/article/tokenring-2026-1-1-colossus-rising-how-xais-memphis-supercomputer-redefined-the-global-compute-race). January 2026.
+
+[^colossus-networking]: NVIDIA Newsroom. "NVIDIA Ethernet Networking Accelerates World's Largest AI Supercomputer, Built by xAI." [nvidianews.nvidia.com](https://nvidianews.nvidia.com/news/spectrum-x-ethernet-networking-xai-colossus).
+
+[^colossus-expansion]: Introl. "xAI's $20 Billion Mississippi Supercomputer: 2 GW Facility Reshapes AI Race." [introl.com](https://introl.com/blog/xai-mississippi-20-billion-supercomputer-memphis-2026). January 2026.
+
+[^rainier-largest]: Data Center Dynamics. "AWS activates Project Rainier cluster of nearly 500,000 Trainium2 chips." [datacenterdynamics.com](https://www.datacenterdynamics.com/en/news/aws-activates-project-rainier-cluster-of-nearly-500000-trainium2-chips/).
+
+[^rainier-activation]: About Amazon. "AWS activates Project Rainier: One of the world's largest AI compute clusters." [aboutamazon.com](https://www.aboutamazon.com/news/aws/aws-project-rainier-ai-trainium-chips-compute-cluster). October 2025.
+
+[^rainier-ultraserver]: Data Centre Magazine. "AWS: How 500,000 Trainium2 Chips Power Project Rainier." [datacentremagazine.com](https://datacentremagazine.com/news/aws-how-500-000-trainium2-chips-power-project-rainier).
+
+[^rainier-construction]: DataCenter News. "AWS's $11bn Indiana data centre powers Anthropic's AI growth." [datacenter.news](https://datacenter.news/story/aws-s-11bn-indiana-data-centre-powers-anthropic-s-ai-growth).
+
+[^rainier-anthropic]: Anthropic. "Powering the next generation of AI development with AWS." [anthropic.com](https://www.anthropic.com/news/anthropic-amazon-trainium).
+
+[^rainier-million]: Constellation Research. "AWS fires up Project Rainier, Trainium2 cluster for Anthropic." [constellationr.com](https://www.constellationr.com/blog-news/insights/aws-fires-project-rainier-trainium2-cluster-anthropic).
+
+[^trainium3]: SemiAnalysis. "Amazon's AI Resurgence: AWS & Anthropic's Multi-Gigawatt Trainium Expansion." [newsletter.semianalysis.com](https://newsletter.semianalysis.com/p/amazons-ai-resurgence-aws-anthropics-multi-gigawatt-trainium-expansion).
+
+[^meta-fleet]: AIBase. "Meta Announces World's First 1GW+ Power Supercomputer Cluster." [aibase.com](https://www.aibase.com/news/www.aibase.com/news/19689).
+
+[^meta-24k]: Data Center Dynamics. "Meta reveals details of two new 24k GPU AI clusters." [datacenterdynamics.com](https://www.datacenterdynamics.com/en/news/meta-reveals-details-of-two-new-24k-gpu-ai-clusters/).
+
+[^meta-tents]: Aterio. "Inside Meta's Prometheus Campus Shift." [aterio.io](https://www.aterio.io/blog/inside-meta-s-prometheus-campus-shift).
+
+[^meta-engineering]: Meta. "Meta's Infrastructure Evolution and the Advent of AI." Engineering at Meta blog. [engineering.fb.com](https://engineering.fb.com/2025/09/29/data-infrastructure/metas-infrastructure-evolution-and-the-advent-of-ai/). September 2025.
+
+[^meta-capex]: FinancialContent / TokenRing. "The Gigawatt Era: Inside Mark Zuckerberg's 'Meta Compute' Manifesto." [financialcontent.com](https://markets.financialcontent.com/stocks/article/tokenring-2026-2-6-the-gigawatt-era-inside-mark-zuckerbergs-meta-compute-manifesto). February 2026.
+
+[^stargate-announce]: Wikipedia. "Stargate LLC." [en.wikipedia.org](https://en.wikipedia.org/wiki/Stargate_LLC).
+
+[^stargate-phase1]: CNBC. "OpenAI's first data center in $500 billion Stargate project is open in Texas." [cnbc.com](https://www.cnbc.com/2025/09/23/openai-first-data-center-in-500-billion-stargate-project-up-in-texas.html). September 2025.
+
+[^stargate-450k]: Data Center Dynamics. "OpenAI and Oracle to deploy 450,000 GB200 GPUs at Stargate data center in Abilene, Texas." [datacenterdynamics.com](https://www.datacenterdynamics.com/en/news/openai-and-oracle-to-deploy-450000-gb200-gpus-at-stargate-abilene-data-center/).
+
+[^stargate-sites]: OpenAI. "OpenAI, Oracle, and SoftBank expand Stargate with five new AI data center sites." [openai.com](https://openai.com/index/five-new-stargate-sites/). September 2025.
+
+[^stargate-funding]: OpenAI. "Stargate advances with 4.5 GW partnership with Oracle." [openai.com](https://openai.com/index/stargate-advances-with-partnership-with-oracle/).
+
+[^elcapitan-top500]: LLNL. "A look back at SC24: El Capitan crowned." [llnl.gov](https://www.llnl.gov/article/52166/look-back-sc24-el-capitan-crowned-llnls-legacy-supercomputing-leadership-reaches-new-heights).
+
+[^elcapitan-hw]: LLNL. "Using El Capitan Systems: Hardware Overview." [hpc.llnl.gov](https://hpc.llnl.gov/documentation/user-guides/using-el-capitan-systems/hardware-overview).
+
+[^elcapitan-specs]: Wikipedia. "El Capitan (supercomputer)." [en.wikipedia.org](https://en.wikipedia.org/wiki/El_Capitan_(supercomputer)).
+
+[^elcapitan-cooling]: HPCwire. "An Inside Look at El Capitan: Facts Beyond the Numbers." [hpcwire.com](https://www.hpcwire.com/2024/11/19/an-inside-look-at-el-capitan-facts-beyond-the-numbers/).
+
+[^epoch-comparison]: Epoch AI. "The US hosts the majority of GPU cluster performance." [epoch.ai](https://epoch.ai/data-insights/ai-supercomputers-performance-share-by-country). "As of May 2025, the largest known public AI supercomputer, Lawrence Livermore's El Capitan, achieves less than a quarter of the computational performance of the largest known industry cluster."
+
+[^elcapitan-mission]: LLNL. "El Capitan: NNSA's first exascale machine." [asc.llnl.gov](https://asc.llnl.gov/exascale/el-capitan).
+
+[^prometheus-titan]: Sherwood News. "Clash of the titans: Here are the biggest AI data center projects." [sherwood.news](https://sherwood.news/tech/clash-of-the-titans-here-are-the-biggest-ai-data-center-projects/).
+
+[^prometheus-semi]: FinancialContent / TokenRing. "The Gigawatt Era: Inside Mark Zuckerberg's 'Meta Compute' Manifesto." [financialcontent.com](https://markets.financialcontent.com/stocks/article/tokenring-2026-2-6-the-gigawatt-era-inside-mark-zuckerbergs-meta-compute-manifesto). SemiAnalysis estimates referenced within.
+
+[^meta-billions]: Data Centre Review. "Meta earmarks 'hundreds of billions' for AI data centres." [datacentrereview.com](https://datacentrereview.com/2025/07/meta-earmarks-hundreds-of-billions-for-multi-gigawatt-ai-data-centres/). July 2025.
+
+[^meta-nuclear]: Blocks & Files. "Meta superintelligence push to drive huge demand for storage." [blocksandfiles.com](https://blocksandfiles.com/2025/07/15/zucks-super-massive-ai-data-centers-will-be-storage-gold-mines/). July 2025.
+
+[^humain-nvidia]: NVIDIA Newsroom. "HUMAIN and NVIDIA Announce Strategic Partnership to Build AI Factories of the Future in Saudi Arabia." [nvidianews.nvidia.com](https://nvidianews.nvidia.com/news/humain-and-nvidia-announce-strategic-partnership-to-build-ai-factories-of-the-future-in-saudi-arabia).
+
+[^humain-amd]: AMD Newsroom. "AMD, Cisco and HUMAIN to Form Joint Venture to Deliver World-Leading AI Infrastructure." [amd.com](https://www.amd.com/en/newsroom/press-releases/2025-11-19-amd-cisco-and-humain-to-form-joint-venture.html). November 2025.
+
+[^humain-xai]: PR Newswire. "HUMAIN Expands Strategic Partnership with NVIDIA, Advancing Global AI Infrastructure with xAI, Global AI, and AWS." [prnewswire.com](https://www.prnewswire.com/news-releases/humain-expands-strategic-partnership-with-nvidia-advancing-global-ai-infrastructure-with-xai-global-ai-and-aws-at-the-us-saudi-investment-forum-302620854.html).
+
+[^humain-aws]: CNBC. "Saudi AI firm Humain is pouring billions into data centers. Will it pay off?" [cnbc.com](https://www.cnbc.com/2025/08/27/saudi-arabia-wants-to-be-worlds-third-largest-ai-provider-humain.html). August 2025.
+
+[^humain-ambition]: CNBC. "Saudi AI firm Humain is pouring billions into data centers." [cnbc.com](https://www.cnbc.com/2025/08/27/saudi-arabia-wants-to-be-worlds-third-largest-ai-provider-humain.html). Humain CEO Tareq Amin: "We want to be the third-largest AI provider in the world."
+
+[^oracle-zetta]: Oracle Cloud Infrastructure blog. "Announcing World's Largest, First Zettascale AI Supercomputer in the Cloud." [blogs.oracle.com](https://blogs.oracle.com/cloud-infrastructure/worlds-largest-ai-supercomputer-in-the-cloud).
+
+[^epoch-geography]: Epoch AI. "The US hosts the majority of GPU cluster performance, followed by China." [epoch.ai](https://epoch.ai/data-insights/ai-supercomputers-performance-share-by-country). "U.S. 74.5%, China 14.1%, EU 4.8%."
+
+[^china-compute]: Epoch AI. "Trends in AI Supercomputers." [epoch.ai](https://epoch.ai/blog/trends-in-ai-supercomputers). "China's Ministry of Industry and Information Technology stated that by July 2024, China operated ≈230 exaflops of aggregate computing power."
+
+[^epoch-private]: Epoch AI. "Trends in AI Supercomputers." [epoch.ai](https://epoch.ai/blog/trends-in-ai-supercomputers). "Industry owned about 40% of computing power in 2019, but by 2025, this rose to 80%."
+
+*If you have corrections or additional public data points, please [open an issue](https://github.com/lucid-computing-labs/ai-infra-field-guide/issues).*

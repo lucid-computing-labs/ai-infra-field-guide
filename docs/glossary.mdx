@@ -1,0 +1,52 @@
+---
+sidebar_position: 6
+title: Glossary
+---
+
+# Glossary
+
+Key terms used throughout the field guide. Definitions prioritize practical understanding over formal precision.
+
+---
+
+**All-reduce** — A collective communication operation where every participant (GPU) contributes a value (typically gradients) and every participant receives the combined result. The dominant communication pattern in data-parallel training.
+
+**BMC (Baseboard Management Controller)** — A small dedicated processor on a server motherboard that provides out-of-band management capabilities: power control, sensor readings (temperature, fan speed, power draw), console access, and hardware event logging. Accessible even when the main system is powered off.
+
+**CDU (Coolant Distribution Unit)** — Equipment that transfers heat between the facility cooling loop and the rack-level cooling loop in a liquid-cooled system. Typically sits on the data center floor near the racks it serves.
+
+**Checkpointing** — Periodically saving the complete state of a training run (model weights, optimizer state, training step counter, etc.) to persistent storage. Enables resumption after hardware failures without losing all progress since the start of training.
+
+**Collective Communication** — A set of communication operations where all participants in a group coordinate to exchange data. Key operations include all-reduce, all-gather, reduce-scatter, and broadcast. Efficiency of collectives is a primary determinant of training performance at scale.
+
+**DCGM (Data Center GPU Manager)** — NVIDIA's tool for monitoring and managing GPUs in cluster environments. Reports metrics including GPU utilization, memory usage, temperature, power draw, ECC errors, NVLink status, and PCIe throughput.
+
+**DGX** — NVIDIA's integrated AI server platform. A DGX node typically contains 8 GPUs connected via NVLink, plus CPUs, system memory, storage, and network interfaces. DGX systems are designed as building blocks for larger clusters.
+
+**DLC (Direct Liquid Cooling)** — A cooling approach where liquid coolant flows through cold plates mounted directly on heat-producing components (GPU dies, CPUs). More efficient than air cooling for high-density workloads because liquid has ~3,500x the volumetric heat capacity of air.
+
+**Fat-tree** — A network topology commonly used in HPC and AI clusters. Provides full bisection bandwidth (every half of the network can communicate with the other half at full speed) and multiple paths between any two endpoints for redundancy and load balancing.
+
+**FLOPS** — Floating-point Operations Per Second. The standard measure of compute throughput. Modern AI GPUs are rated in PFLOPS (10^15 FLOPS) or EFLOPS (10^18 FLOPS), with the exact number depending on the numerical precision (FP64, FP32, FP16, FP8, INT8).
+
+**HBM (High Bandwidth Memory)** — A type of memory used in GPUs and accelerators that stacks memory dies vertically and connects them with through-silicon vias (TSVs). Provides much higher bandwidth than traditional DRAM. HBM3e (used in Blackwell) provides up to 8 TB/s of memory bandwidth per GPU.
+
+**InfiniBand (IB)** — A high-performance networking technology widely used in HPC and AI clusters. Provides low latency (~1-5 microseconds) and high bandwidth (up to 400 Gb/s per port with NDR). Includes built-in support for RDMA.
+
+**NVLink** — NVIDIA's high-speed GPU-to-GPU interconnect. Provides 900 GB/s bidirectional bandwidth per GPU in the Blackwell generation. NVLink traffic is internal to the NVLink domain and is not visible to network monitoring infrastructure (SmartNICs, switches).
+
+**NVL72** — NVIDIA's rack-scale GPU system containing 72 Blackwell GPUs connected via NVLink and NVSwitch in a single liquid-cooled rack. The entire rack acts as one NVLink domain, drawing approximately 132 kW.
+
+**NVSwitch** — NVIDIA's dedicated switch chip that connects multiple GPUs via NVLink. Enables all-to-all GPU communication within an NVLink domain without using the external network fabric.
+
+**PUE (Power Usage Effectiveness)** — A metric for data center energy efficiency, defined as total facility power divided by IT equipment power. A PUE of 1.0 means all power goes to compute; 1.15 means 15% goes to cooling and facility overhead. State-of-the-art AI facilities target 1.1-1.2.
+
+**RDMA (Remote Direct Memory Access)** — A networking capability that allows one machine to directly read from or write to another machine's memory without involving the CPU on either side. Essential for high-performance collective communication in training clusters.
+
+**SmartNIC** — A network interface card with its own processor, memory, and programmable pipeline. Can inspect, filter, or modify network traffic inline. In verification contexts, SmartNICs can observe InfiniBand traffic patterns — but cannot see NVLink traffic.
+
+**SuperPOD** — NVIDIA's term for a building block of a large cluster, typically consisting of multiple NVL72 racks connected via an InfiniBand network. A SuperPOD provides a balanced compute-to-network-bandwidth ratio.
+
+**TPM (Trusted Platform Module)** — A hardware security chip that provides cryptographic functions including secure key storage, platform integrity measurement, and remote attestation. Can be used to establish a hardware-rooted chain of trust from boot through runtime.
+
+**UFM (Unified Fabric Manager)** — NVIDIA/Mellanox's management platform for InfiniBand networks. Provides topology discovery, health monitoring, performance counters, and diagnostics for the entire IB fabric.

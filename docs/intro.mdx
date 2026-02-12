@@ -1,0 +1,59 @@
+---
+sidebar_position: 1
+title: Introduction
+slug: /intro
+---
+
+# AI Infrastructure Field Guide
+
+**An attempt to create a quick, community tutorial on modern AI clusters — for people who want to verify, govern, or just understand them.**
+
+## Who This Is For
+
+You're a verification researcher, governance professional, policy analyst, or technically curious person trying to understand how modern AI training infrastructure actually works. You've read the press releases about 100,000-GPU clusters and the policy papers about compute governance. But there's a gap between vendor marketing and the operational reality of what's inside these facilities.
+
+This guide is our attempt to help bridge that gap. It's incomplete, probably wrong in places, and will need continuous updating as the field evolves. We're publishing it anyway because imperfect documentation beats no documentation.
+
+## What You'll Learn
+
+This guide covers four interconnected layers of AI infrastructure:
+
+1. **Physical Architecture** — Racks, cooling, power delivery. Why a single GB200 NVL72 rack draws 132 kW and what that means for facility design, cooling infrastructure, and the physical constraints that shape everything above.
+
+2. **Interconnects** — NVLink, InfiniBand, Ethernet, and the critical boundaries between them. This is where most people's mental models break down, and where the verification story gets interesting.
+
+3. **Cluster Management** — Schedulers, orchestration, health monitoring. The software layer that turns thousands of individual GPUs into a single coherent training system.
+
+4. **Verification Relevance** — What can you actually observe from outside? What's invisible? What does this mean for AI governance, compute monitoring, and safety verification?
+
+## How to Use This Guide
+
+**This is not a document to skim.** If you read it passively, you'll think you understand it, and you'll be wrong. Research on learning (particularly Andy Matuschak's work on transformative tools for thought) shows that passive reading produces an illusion of understanding that collapses when you try to apply the knowledge.
+
+To counter this, the guide uses three active engagement techniques:
+
+### Concept Checks
+
+Every few hundred words, you'll hit an inline question that tests whether you actually understood the implication of what you just read — not just the definition. These are uncomfortable. That's the point. If you get one wrong, re-read the preceding section before moving on.
+
+### Interactive Explorables
+
+Some things can't be understood from static text. When you need to develop intuition for how parameters interact — how power scales with density, how topology affects latency, where monitoring boundaries fall — you'll find interactive components you can manipulate directly.
+
+### "What Would You Do?" Scenarios
+
+Each chapter ends with an open-ended scenario that connects infrastructure knowledge to a real verification or governance problem. There's no single right answer. The goal is to force you to synthesize across sections and think like a practitioner.
+
+## How This Was Made
+
+This guide is a collaboration between humans and AI writing/engineering assistants. The prose was drafted with AI assistance and edited by humans. The interactive components and site infrastructure were built with AI coding tools.
+
+We're trying to be honest about what we know and don't know. If something seems off, it probably is — please let us know.
+
+## Contributing
+
+This is an open-source project. If you find errors, want to suggest improvements, or have experience that would make a section more concrete, please contribute. See our [Contributing Guide](https://github.com/lucid-computing-labs/ai-infra-field-guide/blob/main/CONTRIBUTING.md) for guidelines.
+
+---
+
+*Ready to start? Begin with [Interconnects](/docs/interconnects) — it's where the knowledge gap is largest and where the interactive components are most compelling. Or start from the beginning with [Physical Architecture](/docs/physical-architecture).*
