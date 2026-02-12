@@ -7,6 +7,14 @@ const config: Config = {
   tagline: 'An attempt to create a quick, community tutorial on modern AI clusters — for verification researchers, governance professionals, and the technically curious.',
   favicon: 'img/favicon.ico',
 
+  scripts: [
+    {
+      src: '//gc.zgo.at/count.js',
+      async: true,
+      'data-goatcounter': 'https://lucidlabs.goatcounter.com/count',
+    },
+  ],
+
   future: {
     v4: true,
   },
